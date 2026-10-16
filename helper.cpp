@@ -13,6 +13,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QTimer>
+#include <QCoreApplication>
 
 #include "utils.h"
 #include "addcriteriondialog.h"
@@ -32,7 +33,7 @@ TypeStyle styleFortype(const QString& type) {
 Helper::Helper(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Helper)
-    , db("D:\\Users\\shoto\\Documents\\FUT_Helper\\bdd.db",
+    , db(QCoreApplication::applicationDirPath() + "/bdd.db",
          QString("%1").arg(QInputDialog::getInt(this, "Version", "Enter the version of the game you wish to use.",
                                                 27, 25, 27, 1)))
     , position_radiobuttons()
