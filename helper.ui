@@ -1,0 +1,1037 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Helper</class>
+ <widget class="QMainWindow" name="Helper">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>609</width>
+    <height>649</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>500</width>
+    <height>500</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>16777215</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>13</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>Helper</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>611</width>
+      <height>651</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>2</number>
+    </property>
+    <widget class="QWidget" name="edit_db_tab">
+     <attribute name="title">
+      <string>Edit DB</string>
+     </attribute>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>440</y>
+        <width>591</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="stats_layout">
+       <item>
+        <widget class="QLabel" name="stats_label">
+         <property name="font">
+          <font>
+           <pointsize>13</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Stats:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="stats_sliders_layout">
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="stat1_layout">
+           <item>
+            <widget class="QLabel" name="stat1_label">
+             <property name="text">
+              <string>PAC</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSlider" name="stat1_slider">
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="pageStep">
+              <number>1</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TickPosition::TicksBelow</enum>
+             </property>
+             <property name="tickInterval">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="stat1_value_label">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="0" column="1">
+          <layout class="QHBoxLayout" name="stat2_layout">
+           <item>
+            <widget class="QLabel" name="stat2_label">
+             <property name="text">
+              <string>DRI</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSlider" name="stat2_slider">
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="pageStep">
+              <number>1</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TickPosition::TicksBelow</enum>
+             </property>
+             <property name="tickInterval">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="stat2_value_label">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <layout class="QHBoxLayout" name="stat3_layout">
+           <item>
+            <widget class="QLabel" name="stat3_label">
+             <property name="text">
+              <string>SHO</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSlider" name="stat3_slider">
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="pageStep">
+              <number>1</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TickPosition::TicksBelow</enum>
+             </property>
+             <property name="tickInterval">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="stat3_value_label">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="1">
+          <layout class="QHBoxLayout" name="stat4_layout">
+           <item>
+            <widget class="QLabel" name="stat4_label">
+             <property name="text">
+              <string>DEF</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSlider" name="stat4_slider">
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="pageStep">
+              <number>1</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TickPosition::TicksBelow</enum>
+             </property>
+             <property name="tickInterval">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="stat4_value_label">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0">
+          <layout class="QHBoxLayout" name="stat5_layout">
+           <item>
+            <widget class="QLabel" name="stat5_label">
+             <property name="text">
+              <string>PAS</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSlider" name="stat5_slider">
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="pageStep">
+              <number>1</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TickPosition::TicksBelow</enum>
+             </property>
+             <property name="tickInterval">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="stat5_value_label">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="1">
+          <layout class="QHBoxLayout" name="stat6_layout">
+           <item>
+            <widget class="QLabel" name="stat6_label">
+             <property name="text">
+              <string>PHY</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSlider" name="stat6_slider">
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="pageStep">
+              <number>1</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TickPosition::TicksBelow</enum>
+             </property>
+             <property name="tickInterval">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="stat6_value_label">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>400</y>
+        <width>591</width>
+        <height>34</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="club_layout">
+       <item>
+        <widget class="QLabel" name="club_label">
+         <property name="font">
+          <font>
+           <pointsize>13</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Club:     </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="club_entry"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>320</y>
+        <width>591</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="country_layout">
+       <item>
+        <widget class="QLabel" name="country_label">
+         <property name="font">
+          <font>
+           <pointsize>13</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Country:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="country_entry"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>80</y>
+        <width>591</width>
+        <height>231</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="position_layout">
+       <item>
+        <widget class="QLabel" name="position_label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>13</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Positions:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="positions_layout">
+         <item>
+          <layout class="QHBoxLayout" name="attackers_layout">
+           <item>
+            <widget class="QRadioButton" name="lw_radiobutton">
+             <property name="text">
+              <string>LW</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="st_radiobutton">
+             <property name="text">
+              <string>ST</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="rw_radiobutton">
+             <property name="text">
+              <string>RW</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item alignment="Qt::AlignmentFlag::AlignHCenter">
+          <widget class="QRadioButton" name="cam_radiobutton">
+           <property name="text">
+            <string>CAM</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="midfielders_layout">
+           <item>
+            <widget class="QRadioButton" name="lm_radiobutton">
+             <property name="text">
+              <string>LM</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="cm_radiobutton">
+             <property name="text">
+              <string>CM</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="rm_radiobutton">
+             <property name="text">
+              <string>RM</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="defensive_midfielders_layout">
+           <item alignment="Qt::AlignmentFlag::AlignHCenter">
+            <widget class="QRadioButton" name="cdm_radiobutton">
+             <property name="text">
+              <string>CDM</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="defenders_layout">
+           <item>
+            <widget class="QRadioButton" name="lb_radiobutton">
+             <property name="text">
+              <string>LB</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="cb_radiobutton">
+             <property name="text">
+              <string>CB</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="rb_radiobutton">
+             <property name="text">
+              <string>RB</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item alignment="Qt::AlignmentFlag::AlignHCenter">
+          <widget class="QRadioButton" name="gk_radiobutton">
+           <property name="text">
+            <string>GK</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="sec_positions_layout">
+         <item>
+          <layout class="QHBoxLayout" name="sec_attackers_layout">
+           <item>
+            <widget class="QCheckBox" name="lw_checkbox">
+             <property name="text">
+              <string>LW</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="st_checkbox">
+             <property name="text">
+              <string>ST</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="rw_checkbox">
+             <property name="text">
+              <string>RW</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item alignment="Qt::AlignmentFlag::AlignHCenter">
+          <widget class="QCheckBox" name="cam_checkbox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>CAM</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="sec_midfielders_layout">
+           <item>
+            <widget class="QCheckBox" name="lm_checkbox">
+             <property name="text">
+              <string>LM</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="cm_checkbox">
+             <property name="text">
+              <string>CM</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="rm_checkbox">
+             <property name="text">
+              <string>RM</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="sec_defensive_midfielders_layout">
+           <item alignment="Qt::AlignmentFlag::AlignHCenter">
+            <widget class="QCheckBox" name="cdm_checkbox">
+             <property name="text">
+              <string>CDM</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="sec_defenders_layout">
+           <item>
+            <widget class="QCheckBox" name="lb_checkbox">
+             <property name="text">
+              <string>LB</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="cb_checkbox">
+             <property name="text">
+              <string>CB</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="rb_checkbox">
+             <property name="text">
+              <string>RB</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item alignment="Qt::AlignmentFlag::AlignHCenter">
+          <widget class="QCheckBox" name="gk_checkbox">
+           <property name="text">
+            <string>GK</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>50</y>
+        <width>591</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="rating_layout">
+       <item>
+        <widget class="QLabel" name="rating_label">
+         <property name="font">
+          <font>
+           <pointsize>13</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Rating:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="rating_slider">
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <number>47</number>
+         </property>
+         <property name="pageStep">
+          <number>1</number>
+         </property>
+         <property name="value">
+          <number>75</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="tickPosition">
+          <enum>QSlider::TickPosition::TicksBelow</enum>
+         </property>
+         <property name="tickInterval">
+          <number>5</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="rating_value_label">
+         <property name="text">
+          <string>rating_value</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>591</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="name_layout">
+       <item>
+        <widget class="QLabel" name="name_label">
+         <property name="font">
+          <font>
+           <pointsize>13</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Name: </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="name_entry">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="last_added_label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>220</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>(Last added: )</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>580</y>
+        <width>201</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="buttons_layout">
+       <item>
+        <widget class="QPushButton" name="edit_pushbutton">
+         <property name="text">
+          <string>Edit</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="submit_pushbutton">
+         <property name="text">
+          <string>Submit</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>580</y>
+        <width>371</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="type_layout">
+       <item>
+        <widget class="QLabel" name="type_label">
+         <property name="font">
+          <font>
+           <pointsize>13</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Type:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="type_combobox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>150</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>360</y>
+        <width>591</width>
+        <height>34</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="league_layout">
+       <item>
+        <widget class="QLabel" name="league_label">
+         <property name="font">
+          <font>
+           <pointsize>13</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>League:     </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="league_entry">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="review_unfilled_tab">
+     <attribute name="title">
+      <string>Review unfilled cards</string>
+     </attribute>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>10</y>
+        <width>481</width>
+        <height>521</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="unfilled_label">
+         <property name="text">
+          <string>Click a name to send it to the edit tab and fill the card's info.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="unfilled_listwidget"/>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="sbcsolver_tab">
+     <attribute name="title">
+      <string>SBC Solver</string>
+     </attribute>
+     <widget class="QGroupBox" name="criteria_groupbox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>241</width>
+        <height>331</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Criteria</string>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
+      </property>
+      <widget class="QWidget" name="layoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>40</y>
+         <width>217</width>
+         <height>281</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QPushButton" name="add_button">
+            <property name="text">
+             <string>Add criteria</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QListWidget" name="criteria_listwidget"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="clicktoremove_label">
+          <property name="text">
+           <string>Click a criterion to remove it</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+     <widget class="QPushButton" name="solve_button">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>350</y>
+        <width>80</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Solve!</string>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="solutions_groupbox">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>10</y>
+        <width>251</width>
+        <height>331</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Solutions</string>
+      </property>
+      <widget class="QWidget" name="layoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>40</y>
+         <width>231</width>
+         <height>281</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="numberofsolutions_label">
+            <property name="text">
+             <string>Number of solutions:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="solutionscount_label">
+            <property name="font">
+             <font>
+              <pointsize>13</pointsize>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QListWidget" name="solutions_listwidget"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="clicktoexpand_label">
+          <property name="text">
+           <string>Click a solution to expand it</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+     <widget class="QPushButton" name="cancel_button">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>350</y>
+        <width>80</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Cancel</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="long_search_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>350</y>
+        <width>121</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Time budget:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="time_budget_spinbox">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>360</x>
+        <y>350</y>
+        <width>81</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="suffix">
+       <string> s</string>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>3600</number>
+      </property>
+      <property name="value">
+       <number>120</number>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

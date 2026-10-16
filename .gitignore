@@ -1,0 +1,30 @@
+# Build output
+build/
+build-*/
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+*.app/
+
+# Qt Creator / qmake
+*.pro.user
+*.pro.user.*
+CMakeLists.txt.user*
+.qmake.stash
+Makefile
+Makefile.Debug
+Makefile.Release
+ui_*.h
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
