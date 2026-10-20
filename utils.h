@@ -5,6 +5,18 @@
 #include <QListWidget>
 #include <QMessageBox>
 #include <QCheckBox>
+#include <QCoreApplication>
+#include <QDir>
+
+static inline QString findSourceDb() {
+    QDir d(QCoreApplication::applicationDirPath());
+    for (int i = 0; i < 6; ++i) {
+        const QString candidate = d.absoluteFilePath("bdd.db");
+        if (QFile::exists(candidate)) return candidate;
+        if (!d.cdUp()) break;
+    }
+    return QCoreApplication::applicationDirPath() + "/bdd.db"; // fallback
+}
 
 inline int getIdFromStrRep(const QList<QPair<int, QString>>& pairs, const QString& str_rep) {
     for (const auto& pair : pairs) {
@@ -21,14 +33,6 @@ inline QStringList getListWidgetItems(const QListWidget& listwidget) {
         result << listwidget.item(i)->text();
     }
     return result;
-}
-
-inline QString getSingleCriteria(const QStringList& criteria_list, const QString& criteria) {
-    return criteria_list.filter(criteria).at(0);
-}
-
-inline QString getCriteriaValue(const QString& criteria) {
-    return criteria.split('(')[1].chopped(1);
 }
 
 inline QList<QStringList> permutations(const QStringList& qsl) {

@@ -64,25 +64,12 @@ set_target_properties(FUT_Helper PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/bdd.db")
-    message(WARNING "bdd.db not found at ${CMAKE_SOURCE_DIR}/bdd.db - the post-build copy will fail.")
-endif()
-
-add_custom_command(TARGET FUT_Helper POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_SOURCE_DIR}/bdd.db"
-        "$<TARGET_FILE_DIR:FUT_Helper>/bdd.db"
-    COMMENT "Copying bdd.db next to executables"
-)
-
 include(GNUInstallDirs)
 install(TARGETS FUT_Helper
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
-install(FILES ${CMAKE_SOURCE_DIR}/bdd.db DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(FUT_Helper)
