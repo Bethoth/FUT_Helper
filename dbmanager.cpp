@@ -251,7 +251,7 @@ QVector<int> DbManager::getSames(int id) const {
 }
 
 QStringList DbManager::getPlayerInfoByName(const QString& name) const {
-    QSqlQuery query(QString("SELECT id, name, rating, type, country, club FROM %1 JOIN %2 ON id = card WHERE "
+    QSqlQuery query(QString("SELECT id, name, rating, type, country, league, club FROM %1 JOIN %2 ON id = card WHERE "
                             "name = \"%3\"")
                         .arg(cards_table)
                         .arg(sameplayers_table)
@@ -259,7 +259,7 @@ QStringList DbManager::getPlayerInfoByName(const QString& name) const {
     QStringList result;
 
     while (query.next()) {
-        result << QString("%1,%2,%3,%4,%5,%6")
+        result << QString("%1,%2,%3,%4,%5,%6,%7")
                       .arg(query.value(0).toInt())
                       .arg(query.value(1).toString())
                       .arg(query.value(2).toInt())
