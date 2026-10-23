@@ -84,8 +84,15 @@ private slots:
 
     void on_long_search_checkbox_toggled(bool checked);
 
+    void updateSolveProgress();
+
+    void on_save_sbc_button_clicked();
+    void on_load_sbc_button_clicked();
+    void on_delete_sbc_button_clicked();
+
 private:
     Ui::Helper *ui;
+    QString m_iniPath;
 
     DbManager db;
 
@@ -112,7 +119,9 @@ private:
     QSize m_lastSolutionDialogSize;
 
     SBC_Solver* m_runningSolver = nullptr;
-
     QFutureWatcher<void>* m_runningWatcher = nullptr;
+    QTimer* m_progressTimer = nullptr;
+
+    void refreshSavedSbcs();
 };
 #endif // HELPER_H

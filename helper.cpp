@@ -14,6 +14,7 @@
 #include <QClipboard>
 #include <QTimer>
 #include <QCoreApplication>
+#include <QSettings>
 
 #include "utils.h"
 #include "addcriteriondialog.h"
@@ -25,7 +26,7 @@ TypeStyle styleFortype(const QString& type) {
     if (type == "Bronze") return { QColor(0x7A, 0x4A, 0x1E), QColor(0xF6, 0xEA, 0xDD) };
     if (type == "Silver") return { QColor(0x55, 0x55, 0x55), QColor(0xEE, 0xEE, 0xEE) };
     if (type == "Gold")   return { QColor(0x8A, 0x6A, 0x00), QColor(0xFD, 0xF5, 0xDD) };
-    if (type == "Icon")   return { QColor(0x9A, 0x74, 0x2E), QColor(0xFA, 0xF1, 0xDD) };
+    if (type == "Icon")   return { QColor(0xB8, 0x86, 0x0B), QColor(0xF9, 0xF7, 0xF2) };
     else                  return { QColor(0x8A, 0x2B, 0xBE), QColor(0xF3, 0xEA, 0xFA) };
 }
 }
@@ -41,6 +42,8 @@ Helper::Helper(QWidget *parent)
 {
     ui->setupUi(this);
     this->setFixedSize(this->width(), this->height());
+
+    m_iniPath = QFileInfo(findSourceDb()).absolutePath() + "/FUT_Helper.ini";
 
     ui->tabWidget->setCurrentIndex(0);
 
@@ -107,6 +110,8 @@ Helper::Helper(QWidget *parent)
     for (const auto& pair : unfilled_cards) {
         ui->unfilled_listwidget->addItem(pair.second);
     }
+
+    refreshSavedSbcs();
 }
 
 Helper::~Helper() {
@@ -581,6 +586,10 @@ void Helper::applyCriterion(SBC_Solver* s, const QString& crit) const {
     else if (key == "Specials>=") s->specialAtLeast(toInt(parts[0]));
     else if (key == "Specials<=") s->specialAtMost(toInt(parts[0]));
 
+    else if (key == "IconHero=")  s->iconHeroExactly(toInt(parts[0]));
+    else if (key == "IconHero>=") s->iconHeroAtLeast(toInt(parts[0]));
+    else if (key == "IconHero<=") s->iconHeroAtMost(toInt(parts[0]));
+
     else if (key == "MinNations")   s->minNations(toInt(parts[0]));
     else if (key == "MaxNations")   s->maxNations(toInt(parts[0]));
     else if (key == "MinTypes")     s->minTypes(toInt(parts[0]));
@@ -612,6 +621,12 @@ void Helper::applyCriterion(SBC_Solver* s, const QString& crit) const {
         for (const auto& v : parts) ids.insert(v.trimmed().toInt());
         s->excludeCardIds(ids);
     }
+
+    else if (key == "IncludeCards") {
+        QSet<int> ids;
+        for (const auto& v : parts) ids.insert(v.trimmed().toInt());
+        s->includeCardIds(ids);
+    }
 }
 
 void Helper::on_solve_button_clicked() {
@@ -630,6 +645,13 @@ void Helper::on_solve_button_clicked() {
     ui->solutions_listwidget->clear();
     ui->solutionscount_label->setText("solving...");
 
+    if (!m_progressTimer) {
+        m_progressTimer = new QTimer(this);
+        connect(m_progressTimer, &QTimer::timeout, this, &Helper::updateSolveProgress);
+    }
+    ui->solve_progress_bar->setValue(0);
+    m_progressTimer->start(100);
+
     m_runningSolver = solver;
 
     auto* watcher = new QFutureWatcher<void>(this);
@@ -637,6 +659,10 @@ void Helper::on_solve_button_clicked() {
     connect(watcher, &QFutureWatcher<void>::finished, this, [this, solver, watcher](){
         m_runningSolver = nullptr;
         m_runningWatcher = nullptr;
+
+        if (m_progressTimer) m_progressTimer->stop();
+        ui->solve_progress_label->setText("Finished");
+        ui->solve_progress_bar->setValue(ui->solve_progress_bar->maximum());
 
         ui->cancel_button->setEnabled(false);
         ui->solve_button->setEnabled(true);
@@ -683,8 +709,10 @@ void Helper::on_cancel_button_clicked() {
     if (!m_runningSolver) return;
 
     m_runningSolver->cancel();
+    if (m_progressTimer) m_progressTimer->stop();
     ui->cancel_button->setEnabled(false);
     ui->solutionscount_label->setText("cancelling...");
+    ui->solve_progress_label->setText("Cancelling...");
 }
 
 SBC_Solver* Helper::buildSolverFromCriteria() const {
@@ -753,8 +781,8 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
     header->setTextFormat(Qt::RichText);
 
     // table
-    auto* table = new QTableWidget(sol.chosen.size(), 7, &dlg);
-    table->setHorizontalHeaderLabels({"Slot", "Name", "Rating", "Nation", "Club", "Type", "Use"});
+    auto* table = new QTableWidget(sol.chosen.size(), 8, &dlg);
+    table->setHorizontalHeaderLabels({"Slot", "Name", "Rating", "Nation", "Club", "Type", "Use", "Include"});
     table->verticalHeader()->setVisible(false);
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->setSelectionMode(QAbstractItemView::NoSelection);
@@ -769,6 +797,7 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
     hh->setSectionResizeMode(4, QHeaderView::ResizeToContents);
     hh->setSectionResizeMode(5, QHeaderView::ResizeToContents);
     hh->setSectionResizeMode(6, QHeaderView::ResizeToContents);
+    hh->setSectionResizeMode(7, QHeaderView::ResizeToContents);
 
     for (int s = 0; s < sol.chosen.size(); ++s) {
         const int cardIdx = sol.chosen[s];
@@ -805,6 +834,12 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
         useItem->setBackground(st.bg);
         table->setItem(s, 6, useItem);
 
+        auto* includeItem = new QTableWidgetItem();
+        includeItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
+        includeItem->setCheckState(Qt::Unchecked);
+        includeItem->setBackground(st.bg);
+        table->setItem(s, 7, includeItem);
+
         table->setRowHeight(s, 28);
     }
 
@@ -812,6 +847,7 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
     auto* buttons = new QDialogButtonBox(&dlg);
     auto* copyBtn = buttons->addButton("Copy lineup", QDialogButtonBox::ActionRole);
     auto* excludeBtn = buttons->addButton("Exclude selected", QDialogButtonBox::ActionRole);
+    auto* includeBtn = buttons->addButton("Include selected", QDialogButtonBox::ActionRole);
     auto* closeBtn = buttons->addButton(QDialogButtonBox::Close);
 
     connect(closeBtn, &QPushButton::clicked, &dlg, &QDialog::reject);
@@ -846,8 +882,15 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
         excludeAndResolve = true;
         dlg.accept();
     });
+    bool includeAndResolve = false;
+    connect(includeBtn, &QPushButton::clicked, &dlg, [&dlg, &includeAndResolve](){
+        includeAndResolve = true;
+        dlg.accept();
+    });
 
-    auto* hint = new QLabel("Uncheck a card to mark it as unusable, then click <b>Exclude selected</b> to re-solve",
+    auto* hint =
+        new QLabel("Uncheck a card to mark it as unusable, then click <b>Exclude selected</b> to re-solve."
+                            "You can also force to include cards with the right-most column.",
                             &dlg);
     hint->setTextFormat(Qt::RichText);
     hint->setWordWrap(true);
@@ -877,6 +920,22 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
         }
     }
 
+    if (includeAndResolve) {
+        QStringList ids;
+        for (int s = 0; s < sol.chosen.size(); ++s) {
+            auto* it = table->item(s, 7);
+            if (it && it->checkState() == Qt::Checked) {
+                const int cardIdx = sol.chosen[s];
+                if (cardIdx >= 0 && cardIdx < m_lastSolverCards.size())
+                    ids << QString::number(m_lastSolverCards[cardIdx].id);
+            }
+        }
+        if (!ids.isEmpty()) {
+            ui->criteria_listwidget->addItem(QString("IncludeCards(%1)").arg(ids.join(',')));
+            QTimer::singleShot(0, this, &Helper::on_solve_button_clicked);
+        }
+    }
+
     m_lastSolutionDialogSize = dlg.size();
 }
 
@@ -893,6 +952,102 @@ void Helper::on_add_button_clicked() {
     if (c.isEmpty()) return;
 
     ui->criteria_listwidget->addItem(c);
+}
+
+void Helper::updateSolveProgress() {
+    if (!m_runningSolver) return;
+
+    const quint64 nodes = m_runningSolver->nodeCount();
+    const qint64 ms = m_runningSolver->elapsedMs();
+
+    if (ui->long_search_checkbox->isChecked()) {
+        const int maxMs = ui->time_budget_spinbox->value() * 1000;
+        ui->solve_progress_bar->setRange(0, maxMs);
+        ui->solve_progress_bar->setValue(qMin(static_cast<int>(ms), maxMs));
+        ui->solve_progress_label->setText(QString("Time: %1s / %2s")
+                                              .arg(ms / 1000.0, 0, 'f', 1)
+                                              .arg(maxMs / 1000));
+    }
+    else {
+        const int maxNodes = 5000000;
+        ui->solve_progress_bar->setRange(0, maxNodes);
+        ui->solve_progress_bar->setValue(qMin(static_cast<int>(nodes), maxNodes));
+        ui->solve_progress_label->setText(QString("Nodes: %1 / 5.0M").arg(nodes));
+    }
+}
+
+void Helper::refreshSavedSbcs() {
+    QSettings settings(m_iniPath, QSettings::IniFormat);
+    settings.beginGroup("SavedSBCs");
+    QStringList keys = settings.childKeys();
+    settings.endGroup();
+
+    keys.sort(Qt::CaseInsensitive);
+
+    ui->saved_sbc_combobox->clear();
+    ui->saved_sbc_combobox->addItems(keys);
+}
+
+void Helper::on_save_sbc_button_clicked() {
+    if (ui->criteria_listwidget->count() == 0) {
+        QMessageBox::warning(this, "Save SBC", "There are no criteria to save.");
+        return;
+    }
+
+    bool ok;
+    QString name = QInputDialog::getText(this, "Save SBC", "Enter a name for this SBC:", QLineEdit::Normal,
+                                         ui->saved_sbc_combobox->currentText(), &ok);
+    name = name.trimmed();
+
+    if (!ok || name.isEmpty()) return;
+
+    QStringList criteria;
+    for (int i = 0; i < ui->criteria_listwidget->count(); ++i) {
+        criteria << ui->criteria_listwidget->item(i)->text();
+    }
+
+    QSettings settings(m_iniPath, QSettings::IniFormat);
+    settings.beginGroup("SavedSBCs");
+
+    if (settings.contains(name)) {
+        if (QMessageBox::question(this, "Overwrite", "An SBC with this name already exists. Overwrite?")
+            != QMessageBox::Yes) return;
+    }
+
+    settings.setValue(name, criteria);
+    settings.endGroup();
+
+    refreshSavedSbcs();
+    ui->saved_sbc_combobox->setCurrentText(name);
+}
+
+void Helper::on_load_sbc_button_clicked() {
+    QString name = ui->saved_sbc_combobox->currentText();
+    if (name.isEmpty()) return;
+
+    QSettings settings(m_iniPath, QSettings::IniFormat);
+    settings.beginGroup("SavedSBCs");
+    QStringList criteria = settings.value(name).toStringList();
+    settings.endGroup();
+
+    ui->criteria_listwidget->clear();
+    ui->criteria_listwidget->addItems(criteria);
+}
+
+void Helper::on_delete_sbc_button_clicked() {
+    QString name = ui->saved_sbc_combobox->currentText();
+    if (name.isEmpty()) return;
+
+    if (QMessageBox::question(this, "Delete SBC", QString("Are you sure you want to delete the saved SBC '%1'?")
+                                                      .arg(name))
+        != QMessageBox::Yes) return;
+
+    QSettings settings(m_iniPath, QSettings::IniFormat);
+    settings.beginGroup("SavedSBCs");
+    settings.remove(name);
+    settings.endGroup();
+
+    refreshSavedSbcs();
 }
 
 

@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>609</width>
+    <width>736</width>
     <height>649</height>
    </rect>
   </property>
@@ -45,7 +45,7 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>611</width>
+      <width>731</width>
       <height>651</height>
      </rect>
     </property>
@@ -858,7 +858,7 @@
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>241</width>
+        <width>441</width>
         <height>331</height>
        </rect>
       </property>
@@ -873,21 +873,55 @@
         <rect>
          <x>20</x>
          <y>40</y>
-         <width>217</width>
+         <width>417</width>
          <height>281</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QHBoxLayout" name="saved_sbc_layout">
           <item>
-           <widget class="QPushButton" name="add_button">
+           <widget class="QComboBox" name="saved_sbc_combobox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="load_sbc_button">
             <property name="text">
-             <string>Add criteria</string>
+             <string>Load</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="save_sbc_button">
+            <property name="text">
+             <string>Save</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="delete_sbc_button">
+            <property name="toolTip">
+             <string>Delete selected SBC</string>
+            </property>
+            <property name="text">
+             <string>X</string>
             </property>
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="add_button">
+          <property name="text">
+           <string>Add criteria</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QListWidget" name="criteria_listwidget"/>
@@ -918,7 +952,7 @@
      <widget class="QGroupBox" name="solutions_groupbox">
       <property name="geometry">
        <rect>
-        <x>260</x>
+        <x>460</x>
         <y>10</y>
         <width>251</width>
         <height>331</height>
@@ -960,6 +994,23 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="solve_progress_bar">
+          <property name="value">
+           <number>0</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="solve_progress_label">
+          <property name="text">
+           <string>Idle</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QListWidget" name="solutions_listwidget"/>
