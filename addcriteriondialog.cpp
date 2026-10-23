@@ -24,6 +24,7 @@ const QStringList kKeys = {
     "Nation=", "Nation>=", "Nation<=",
     "Type=", "Type>=", "Type<=",
     "Specials=", "Specials>=", "Specials<=",
+    "IconHero=", "IconHero>=", "IconHero<=",
     "MinNations", "MaxNations",
     "MinTypes", "MaxTypes",
     "MinClubs", "MaxClubs",
@@ -146,7 +147,8 @@ AddCriterionDialog::Shape AddCriterionDialog::shapeFor(const QString& key) const
         "MinLeagues", "MaxLeagues",
         "MinAvgRating", "MaxAvgRating",
         "MinChemistry", "MaxChemistry",
-        "Specials=", "Specials>=", "Specials<="
+        "Specials=", "Specials>=", "Specials<=",
+        "IconHero=", "IconHero>=", "IconHero<="
     };
     static const QStringList kStrInts = {
         "Club=", "Club>=", "Club<=",
