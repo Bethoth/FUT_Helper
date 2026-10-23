@@ -24,7 +24,7 @@ struct Card {
 struct Slot { int slotNo; QString pos; };
 
 struct CountConstraint {
-    enum Field { Club = 0, League = 1, Nation = 2, Type = 3, SpecialType = 4 };
+    enum Field { Club = 0, League = 1, Nation = 2, Type = 3, SpecialType = 4, IconHeroType = 5 };
     Field field;
     QString value; // unused for SpecialType
     int minCount = 0;
@@ -58,6 +58,9 @@ public:
     SBC_Solver& specialExactly(int n);
     SBC_Solver& specialAtLeast(int n);
     SBC_Solver& specialAtMost(int n);
+    SBC_Solver& iconHeroExactly(int n);
+    SBC_Solver& iconHeroAtLeast(int n);
+    SBC_Solver& iconHeroAtMost(int n);
     SBC_Solver& minAvgRating(int r);
     SBC_Solver& maxAvgRating(int r);
     SBC_Solver& minNations(int n);
@@ -74,6 +77,7 @@ public:
     SBC_Solver& flexibleTypes(const QStringList& ts);
     SBC_Solver& typeCost(const QString& type, int cost);
     SBC_Solver& excludeCardIds(const QSet<int>& ids);
+    SBC_Solver& includeCardIds(const QSet<int>& ids);
     SBC_Solver& maxNodes(quint64 n); // 0 = unlimited
     SBC_Solver& maxSeconds(double sec); // 0 = unlimited
 
@@ -97,6 +101,8 @@ public:
 
     bool hitNodeBudget() const { return m_hitNodeBudget; }
     bool hitTimeBudget() const { return m_hitTimeBudget; }
+    quint64 nodeCount() const { return m_nodeCount.load(); }
+    qint64 elapsedMs() const { return m_searchTimer.elapsed(); }
 
     QString leafRejectionReport() const;
 
@@ -108,6 +114,7 @@ private:
                  QVector<char>& used,
                  QVector<int>& lastIdPerGroup,
                  QVector<int>& countHits,
+                 int requiredPlacedCount,
                  int nationMask, int nationCount,
                  int typeMask, int typeCount,
                  int clubMask, int clubCount,
@@ -173,7 +180,7 @@ private:
     int m_minClubs = 0, m_maxClubs = 11;
     int m_minLeagues = 0, m_maxLeagues = 11;
     int m_minChemistry = 0, m_maxChemistry = -1;
-    QSet<int> m_excludedCardIds;
+    QSet<int> m_excludedCardIds, m_includedCardIds;
 
     int computeChemistry(const QVector<int>& chosenMRV) const;
     QStringList m_flexibleTypes = {"Icon", "Debut Icon", "Hero", "Hall of FUT"};
@@ -188,6 +195,7 @@ private:
     std::atomic<bool> m_hitNodeBudget{false};
     std::atomic<bool> m_hitTimeBudget{false};
     QElapsedTimer m_searchTimer;
+    std::atomic<quint64> m_nodeCount{0};
 
     enum LeafOutcome {
         LeafCostCapMismatch = 0,
@@ -198,6 +206,7 @@ private:
         LeafMinLeagues, LeafMaxLeagues,
         LeafMinRating, LeafMaxRating,
         LeafMinChemistry, LeafMaxChemistry,
+        LeafRequiredCountFailed,
         LeafAccepted,
         LeafOutcomeCount
     };

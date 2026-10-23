@@ -5,8 +5,8 @@
 #include <QtSql/QSqlRecord>
 #include <QElapsedTimer>
 #include <functional>
-
-namespace { static std::atomic<quint64> g_nodeCount{0}; }
+#include <random>
+#include <algorithm>
 
 bool SBC_Solver::canSatisfyCount(int k, int minNeeded) const {
     const int S = slots_.size();
@@ -162,6 +162,21 @@ SBC_Solver& SBC_Solver::specialAtMost(int n) {
     return *this;
 }
 
+SBC_Solver& SBC_Solver::iconHeroExactly(int n) {
+    m_countConstraints.append({CountConstraint::IconHeroType, {}, n, n});
+    return *this;
+}
+
+SBC_Solver& SBC_Solver::iconHeroAtLeast(int n) {
+    m_countConstraints.append({CountConstraint::IconHeroType, {}, n, -1});
+    return *this;
+}
+
+SBC_Solver& SBC_Solver::iconHeroAtMost(int n) {
+    m_countConstraints.append({CountConstraint::IconHeroType, {}, 0, n});
+    return *this;
+}
+
 SBC_Solver& SBC_Solver::minAvgRating(int r) {
     m_minAvgRating = r;
     return *this;
@@ -239,6 +254,11 @@ SBC_Solver& SBC_Solver::typeCost(const QString& type, int cost) {
 
 SBC_Solver& SBC_Solver::excludeCardIds(const QSet<int>& ids) {
     for (int id : ids) m_excludedCardIds.insert(id);
+    return *this;
+}
+
+SBC_Solver& SBC_Solver::includeCardIds(const QSet<int>& ids) {
+    for (int id : ids) m_includedCardIds.insert(id);
     return *this;
 }
 
@@ -395,6 +415,12 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
     }
     const int N = cards.size();
     qDebug() << "Loaded " << N << "candidate cards";
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(cards.begin(), cards.end(), g);
+    idToIdx.clear();
+    for (int i = 0; i < N; ++i) idToIdx[cards[i].id] = i;
 
     cardNationBit.resize(N);
     cardTypeBit.resize(N);
@@ -565,6 +591,9 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
             case CountConstraint::Nation: matches = cards[i].country == cc.value; break;
             case CountConstraint::Type: matches = cards[i].type == cc.value; break;
             case CountConstraint::SpecialType: matches = isSpecialType(cards[i].type); break;
+            case CountConstraint::IconHeroType:
+                matches = cards[i].type == "Icon" || cards[i].type == "Hero" || cards[i].type == "Hall of FUT";
+                break;
             }
             if (matches) bits |= (quint64(1) << k);
         }
@@ -662,7 +691,7 @@ void SBC_Solver::search() {
 
     results.clear();
     aborted = false;
-    g_nodeCount = 0;
+    m_nodeCount = 0;
     m_hitNodeBudget = false;
     m_hitTimeBudget = false;
     m_leafOutcomes.fill(0);
@@ -678,23 +707,23 @@ void SBC_Solver::search() {
 
     QElapsedTimer timer; timer.start();
 
-    recurse(0, chosen, used, lastIdPerGroup, countHits, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, INT_MAX);
+    recurse(0, chosen, used, lastIdPerGroup, countHits, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, INT_MAX);
 
     std::stable_sort(results.begin(), results.end(), [](const Solution& a, const Solution& b){
         return a.totalCost < b.totalCost;
     });
 
     if (m_hitNodeBudget)
-        qWarning() << "Node budget exceeded after" << g_nodeCount.load() << "nodes," << results.size()
+        qWarning() << "Node budget exceeded after" << m_nodeCount.load() << "nodes," << results.size()
                    << "solutions found";
     else if (m_hitTimeBudget)
         qWarning() << "Time budget exceeded after" << m_searchTimer.elapsed() << "ms,"
                    << results.size() << "solutions found,"
-                   << g_nodeCount.load() << "nodes explored";
+                   << m_nodeCount.load() << "nodes explored";
     else
         qDebug() << "Search finalised in" << timer.elapsed() << "ms,"
                  << results.size() << "solutions found,"
-                 << g_nodeCount.load() << "nodes explored"
+                 << m_nodeCount.load() << "nodes explored"
                  << (aborted ? "(stopped early)" : "(exhausted)");
 
     qDebug().noquote() << leafRejectionReport();
@@ -710,6 +739,7 @@ void SBC_Solver::recurse(int slotIdx,
                          QVector<char>& used,
                          QVector<int>& lastIdPerGroup,
                          QVector<int>& countHits,
+                         int requiredPlacedCount,
                          int nationMask, int nationCount,
                          int typeMask, int typeCount,
                          int clubMask, int clubCount,
@@ -719,10 +749,10 @@ void SBC_Solver::recurse(int slotIdx,
     if (aborted) return;
     if (costCap != INT_MAX && totalCost > costCap) return;
 
-    ++g_nodeCount;
+    ++m_nodeCount;
 
     // Node budget: cheap, checked every node
-    if (m_maxNodes > 0 && g_nodeCount > m_maxNodes) {
+    if (m_maxNodes > 0 && m_nodeCount > m_maxNodes) {
         m_hitNodeBudget = true;
         aborted = true;
         return;
@@ -731,7 +761,7 @@ void SBC_Solver::recurse(int slotIdx,
     // Time budget: amortised. QElapsedTimer::elapsed is fast but not free;
     // checking every 1024 nodes keeps overhead below 0.01% at 1M nodes/s
     // while keeping detection latency around 1 ms
-    if (m_maxSeconds > 0.0 && (g_nodeCount & 0x3FFu) == 0) {
+    if (m_maxSeconds > 0.0 && (m_nodeCount & 0x3FFu) == 0) {
         const auto t = m_searchTimer.elapsed();
         if (t > qint64(m_maxSeconds * 1000.0)) {
             m_hitTimeBudget = true;
@@ -739,6 +769,8 @@ void SBC_Solver::recurse(int slotIdx,
             return;
         }
     }
+
+    if (requiredPlacedCount + (orderedSlots.size() - slotIdx) < m_includedCardIds.size()) return;
 
     if (slotIdx == orderedSlots.size()) {
         if (costCap != INT_MAX && totalCost != costCap) {
@@ -777,6 +809,11 @@ void SBC_Solver::recurse(int slotIdx,
         }
         if (m_maxChemistry >= 0 && chem > m_maxChemistry) {
             m_leafOutcomes[LeafMaxChemistry]++;
+            return;
+        }
+
+        if (requiredPlacedCount != m_includedCardIds.size()) {
+            m_leafOutcomes[LeafRequiredCountFailed]++;
             return;
         }
 
@@ -837,21 +874,91 @@ void SBC_Solver::recurse(int slotIdx,
     bool anyForced = false;
     for (int k = 0; k < m_countConstraints.size(); ++k) {
         if (m_constraintMin[k] <= 0) continue;
-        if (countHits[k] + suffixCountAvail[slotIdx][k] != m_constraintMin[k]) continue;
-        bool slotCanMatch = false;
-        for (int i : orderedSlotsCandidates[slotIdx]) {
-            if (m_cardCountBits[i] & (quint64(1) << k)) {
-                slotCanMatch = true;
-                break;
+        // If we have exactly enough slots left to meet the minimum
+        if (countHits[k] + suffixCountAvail[slotIdx][k] == m_constraintMin[k]) {
+            bool slotCanMatch = false;
+            for (int i : orderedSlotsCandidates[slotIdx]) {
+                if (m_cardCountBits[i] & (quint64(1) << k)) {
+                    slotCanMatch = true;
+                    break;
+                }
             }
-        }
-        if (slotCanMatch) {
-            forced[k] = 1;
-            anyForced = true;
+            if (slotCanMatch) {
+                forced[k] = 1;
+                anyForced = true;
+            }
         }
     }
 
-    for (int idx : orderedSlotsCandidates[slotIdx]) {
+    bool forceNewType = typeCount + qMin(remaining, newTypes) == m_minTypes && newTypes > 0;
+    bool forceNewNation = nationCount + qMin(remaining, newNations) == m_minNations && newNations > 0;
+    bool forceNewClub = clubCount + qMin(remaining, newClubs) == m_minClubs && newClubs > 0;
+    bool forceNewLeague = leagueCount + qMin(remaining, newLeagues) == m_minLeagues && newLeagues > 0;
+
+    // Dynamic Heuristic Sorting
+    // If we are at risk of missing a min-constraint, score candidates based on how much diversity they provide
+    // and sort them to explore them first
+
+    // We add 1 to the minima to start prioritising slightly before it is forced
+    bool needTypes =
+        typeCount + qMin(remaining, popcount(suffixTypeAvail[slotIdx] & ~typeMask)) < m_minTypes + 1;
+    bool needNations =
+        nationCount + qMin(remaining, popcount(suffixNationAvail[slotIdx] & ~nationMask)) < m_minNations + 1;
+    bool needClubs =
+        clubCount + qMin(remaining, popcount(suffixClubAvail[slotIdx] & ~clubMask)) < m_minClubs + 1;
+    bool needLeagues =
+        leagueCount + qMin(remaining, popcount(suffixLeagueAvail[slotIdx] & ~leagueMask)) < m_minLeagues + 1;
+
+    bool hasUnmetCounts = false;
+    for (int k = 0; k < m_countConstraints.size(); ++k) {
+        if (m_constraintMin[k] > countHits[k]) {
+            hasUnmetCounts = true;
+            break;
+        }
+    }
+
+    bool hasRequired = requiredPlacedCount < m_includedCardIds.size();
+
+    double currentMaxPossibleAvg = double(totalRating + suffixRatingMaxSum[slotIdx]) / N + m_ratingBonusSlack;
+    bool needRating = currentMaxPossibleAvg < double(m_minAvgRating) + 2.0;
+
+    QVector<int> sortedCandidates;
+
+    // Only sort if there is actually something we are struggling to meet
+    if (needTypes || needNations || needClubs || needLeagues || hasUnmetCounts || hasRequired || anyForced ||
+        needRating) {
+        QVector<QPair<int, int>> scored; // <score, cardIndex>
+
+        for (int idx : orderedSlotsCandidates[slotIdx]) {
+            int score = 0;
+
+            if (needTypes && (cardTypeBit[idx] & ~typeMask))       score += 10;
+            if (needNations && (cardNationBit[idx] & ~nationMask)) score += 10;
+            if (needClubs && (cardClubBit[idx] & ~clubMask))       score += 10;
+            if (needLeagues && (cardLeagueBit[idx] & ~leagueMask)) score += 10;
+
+            if (needRating) score += cards[idx].rating - 70;
+
+            for (int k = 0; k < m_countConstraints.size(); ++k) {
+                if (m_constraintMin[k] > countHits[k] && (m_cardCountBits[idx] & (quint64(1) << k)))
+                    score += 20;
+            }
+
+            if (hasRequired && m_includedCardIds.contains(cards[idx].id)) score += 50;
+
+            scored.append({score, idx});
+        }
+
+        std::stable_sort(scored.begin(), scored.end(), [](const QPair<int, int>& a, const QPair<int, int>& b){
+            return a.first > b.first;
+        });
+
+        for (const auto& p : scored) sortedCandidates.append(p.second);
+    }
+    else
+        sortedCandidates = orderedSlotsCandidates[slotIdx];
+
+    for (int idx : sortedCandidates) {
         if (aborted) return;
 
         if (anyForced) {
@@ -864,6 +971,11 @@ void SBC_Solver::recurse(int slotIdx,
             }
             if (!satisfiesAll) continue;
         }
+
+        if (forceNewType && !(cardTypeBit[idx] & ~typeMask)) continue;
+        if (forceNewNation && !(cardNationBit[idx] & ~nationMask)) continue;
+        if (forceNewClub && !(cardClubBit[idx] & ~clubMask)) continue;
+        if (forceNewLeague && !(cardLeagueBit[idx] & ~leagueMask)) continue;
 
         if (used[idx]) continue;
 
@@ -916,7 +1028,10 @@ void SBC_Solver::recurse(int slotIdx,
             if (hitBits & (quint64(1) << k)) countHits[k]++;
         }
 
-        recurse(slotIdx + 1, chosen, used, lastIdPerGroup, countHits,
+        const bool isRequired = m_includedCardIds.contains(cards[idx].id);
+        const int newRequiredCount = requiredPlacedCount + (isRequired ? 1 : 0);
+
+        recurse(slotIdx + 1, chosen, used, lastIdPerGroup, countHits, newRequiredCount,
                 nationMask | nb, newNCount,
                 typeMask | tb, newTCount,
                 clubMask | cb, newCCount,
@@ -949,22 +1064,23 @@ void SBC_Solver::printResults(int n) const {
 QString SBC_Solver::leafRejectionReport() const {
     struct Row { LeafOutcome outcome; const char* label; };
     static const Row rows[] = {
-        { LeafCostCapMismatch, "cost-cap mismatch"          },
-        { LeafCountMinFailed,  "count-constraint min not met" },
-        { LeafCountMaxFailed,  "count-constraint max exceeded" },
-        { LeafMinNations,      "min-nations"                },
-        { LeafMaxNations,      "max-nations"                },
-        { LeafMinTypes,        "min-types"                  },
-        { LeafMaxTypes,        "max-types"                  },
-        { LeafMinClubs,        "min-clubs"                  },
-        { LeafMaxClubs,        "max-clubs"                  },
-        { LeafMinLeagues,      "min-leagues"                },
-        { LeafMaxLeagues,      "max-leagues"                },
-        { LeafMinRating,       "min-rating"                 },
-        { LeafMaxRating,       "max-rating"                 },
-        { LeafMinChemistry,    "min-chemistry"              },
-        { LeafMaxChemistry,    "max-chemistry"              },
-        { LeafAccepted,        "accepted"                   },
+        { LeafCostCapMismatch,        "cost-cap mismatch"             },
+        { LeafCountMinFailed,         "count-constraint min not met"  },
+        { LeafCountMaxFailed,         "count-constraint max exceeded" },
+        { LeafMinNations,             "min-nations"                   },
+        { LeafMaxNations,             "max-nations"                   },
+        { LeafMinTypes,               "min-types"                     },
+        { LeafMaxTypes,               "max-types"                     },
+        { LeafMinClubs,               "min-clubs"                     },
+        { LeafMaxClubs,               "max-clubs"                     },
+        { LeafMinLeagues,             "min-leagues"                   },
+        { LeafMaxLeagues,             "max-leagues"                   },
+        { LeafMinRating,              "min-rating"                    },
+        { LeafMaxRating,              "max-rating"                    },
+        { LeafMinChemistry,           "min-chemistry"                 },
+        { LeafMaxChemistry,           "max-chemistry"                 },
+        { LeafRequiredCountFailed,    "required cards count not met"  },
+        { LeafAccepted,               "accepted"                      },
     };
 
     quint64 total = 0;
