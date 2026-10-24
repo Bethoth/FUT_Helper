@@ -1,42 +1,52 @@
 #include "helper.h"
 #include "./ui_helper.h"
 
-#include <QDebug>
+#include <QApplication>
+#include <QClipboard>
 #include <QCompleter>
-#include <QInputDialog>
+#include <QCoreApplication>
+#include <QDebug>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QHeaderView>
+#include <QInputDialog>
 #include <QLabel>
-#include <QTableWidget>
-#include <QVBoxLayout>
-#include <QApplication>
-#include <QClipboard>
-#include <QTimer>
-#include <QCoreApplication>
 #include <QSettings>
+#include <QTableWidget>
+#include <QTimer>
+#include <QVBoxLayout>
 
-#include "utils.h"
 #include "addcriteriondialog.h"
+#include "utils.h"
 
 namespace {
-struct TypeStyle { QColor fg; QColor bg; };
+struct TypeStyle
+{
+    QColor fg;
+    QColor bg;
+};
 
-TypeStyle styleFortype(const QString& type) {
-    if (type == "Bronze") return { QColor(0x7A, 0x4A, 0x1E), QColor(0xF6, 0xEA, 0xDD) };
-    if (type == "Silver") return { QColor(0x55, 0x55, 0x55), QColor(0xEE, 0xEE, 0xEE) };
-    if (type == "Gold")   return { QColor(0x8A, 0x6A, 0x00), QColor(0xFD, 0xF5, 0xDD) };
-    if (type == "Icon")   return { QColor(0xB8, 0x86, 0x0B), QColor(0xF9, 0xF7, 0xF2) };
-    else                  return { QColor(0x8A, 0x2B, 0xBE), QColor(0xF3, 0xEA, 0xFA) };
+TypeStyle styleFortype(const QString &type)
+{
+    if (type == "Bronze")
+        return {QColor(0x7A, 0x4A, 0x1E), QColor(0xF6, 0xEA, 0xDD)};
+    if (type == "Silver")
+        return {QColor(0x55, 0x55, 0x55), QColor(0xEE, 0xEE, 0xEE)};
+    if (type == "Gold")
+        return {QColor(0x8A, 0x6A, 0x00), QColor(0xFD, 0xF5, 0xDD)};
+    if (type == "Icon")
+        return {QColor(0xB8, 0x86, 0x0B), QColor(0xF9, 0xF7, 0xF2)};
+    else
+        return {QColor(0x8A, 0x2B, 0xBE), QColor(0xF3, 0xEA, 0xFA)};
 }
-}
+} // namespace
 
 Helper::Helper(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Helper)
     , db(findSourceDb(),
-         QString("%1").arg(QInputDialog::getInt(this, "Version", "Enter the version of the game you wish to use.",
-                                                27, 25, 27, 1)))
+         QString("%1").arg(QInputDialog::getInt(
+             this, "Version", "Enter the version of the game you wish to use.", 27, 25, 27, 1)))
     , position_radiobuttons()
     , position_checkboxes()
 {
@@ -52,22 +62,37 @@ Helper::Helper(QWidget *parent)
     ui->type_combobox->addItems(types);
     ui->type_combobox->setCurrentText("");
 
-    radio_buttons = {ui->lw_radiobutton, ui->st_radiobutton, ui->rw_radiobutton,
-                     ui->cam_radiobutton, ui->lm_radiobutton,
-                     ui->cm_radiobutton, ui->rm_radiobutton, ui->cdm_radiobutton,
-                     ui->lb_radiobutton, ui->cb_radiobutton, ui->rb_radiobutton,
+    radio_buttons = {ui->lw_radiobutton,
+                     ui->st_radiobutton,
+                     ui->rw_radiobutton,
+                     ui->cam_radiobutton,
+                     ui->lm_radiobutton,
+                     ui->cm_radiobutton,
+                     ui->rm_radiobutton,
+                     ui->cdm_radiobutton,
+                     ui->lb_radiobutton,
+                     ui->cb_radiobutton,
+                     ui->rb_radiobutton,
                      ui->gk_radiobutton};
 
-    checkboxes = {ui->lw_checkbox, ui->st_checkbox, ui->rw_checkbox,
-                  ui->cam_checkbox, ui->lm_checkbox, ui->cm_checkbox, ui->rm_checkbox,
-                  ui->cdm_checkbox, ui->lb_checkbox, ui->cb_checkbox,
-                  ui->rb_checkbox, ui->gk_checkbox};
+    checkboxes = {ui->lw_checkbox,
+                  ui->st_checkbox,
+                  ui->rw_checkbox,
+                  ui->cam_checkbox,
+                  ui->lm_checkbox,
+                  ui->cm_checkbox,
+                  ui->rm_checkbox,
+                  ui->cdm_checkbox,
+                  ui->lb_checkbox,
+                  ui->cb_checkbox,
+                  ui->rb_checkbox,
+                  ui->gk_checkbox};
 
-    for (const auto& radio_button : radio_buttons) {
+    for (const auto &radio_button : radio_buttons) {
         position_radiobuttons.addButton(radio_button);
     }
 
-    for (const auto& checkbox : checkboxes) {
+    for (const auto &checkbox : checkboxes) {
         position_checkboxes.addButton(checkbox);
         checkbox->setChecked(false);
     }
@@ -101,86 +126,107 @@ Helper::Helper(QWidget *parent)
     clubs_completer->setFilterMode(Qt::MatchContains);
     ui->club_entry->setCompleter(clubs_completer);
 
-    connect(countries_completer, QOverload<const QString&>::of(&QCompleter::activated),
-            [=](){ui->league_entry->setFocus();});
-    connect(leagues_completer, QOverload<const QString&>::of(&QCompleter::activated),
-            [=](){ui->club_entry->setFocus();});
+    connect(countries_completer, QOverload<const QString &>::of(&QCompleter::activated), [=]() {
+        ui->league_entry->setFocus();
+    });
+    connect(leagues_completer, QOverload<const QString &>::of(&QCompleter::activated), [=]() {
+        ui->club_entry->setFocus();
+    });
 
     unfilled_cards = db.getUnfilled();
-    for (const auto& pair : unfilled_cards) {
+    for (const auto &pair : unfilled_cards) {
         ui->unfilled_listwidget->addItem(pair.second);
     }
 
     refreshSavedSbcs();
 }
 
-Helper::~Helper() {
+Helper::~Helper()
+{
     delete ui;
 }
 
-void Helper::closeEvent(QCloseEvent* event) {
+void Helper::closeEvent(QCloseEvent *event)
+{
     if (m_runningWatcher) {
-        if (m_runningSolver) m_runningSolver->cancel();
+        if (m_runningSolver)
+            m_runningSolver->cancel();
         m_runningWatcher->waitForFinished();
-        delete m_runningSolver; m_runningSolver = nullptr;
-        delete m_runningWatcher; m_runningWatcher = nullptr;
+        delete m_runningSolver;
+        m_runningSolver = nullptr;
+        delete m_runningWatcher;
+        m_runningWatcher = nullptr;
     }
     QMainWindow::closeEvent(event);
 }
 
-void Helper::on_rating_slider_valueChanged(int value) {
+void Helper::on_rating_slider_valueChanged(int value)
+{
     ui->rating_value_label->setNum(value);
 }
 
-void Helper::on_lw_radiobutton_clicked() {
+void Helper::on_lw_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_st_radiobutton_clicked() {
+void Helper::on_st_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_rw_radiobutton_clicked() {
+void Helper::on_rw_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_cam_radiobutton_clicked() {
+void Helper::on_cam_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_lm_radiobutton_clicked() {
+void Helper::on_lm_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_cm_radiobutton_clicked() {
+void Helper::on_cm_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_rm_radiobutton_clicked() {
+void Helper::on_rm_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_cdm_radiobutton_clicked() {
+void Helper::on_cdm_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_lb_radiobutton_clicked() {
+void Helper::on_lb_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_cb_radiobutton_clicked() {
+void Helper::on_cb_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_rb_radiobutton_clicked() {
+void Helper::on_rb_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_gk_radiobutton_clicked() {
+void Helper::on_gk_radiobutton_clicked()
+{
     ui->country_entry->setFocus();
 }
 
-void Helper::on_gk_radiobutton_toggled(bool checked) {
+void Helper::on_gk_radiobutton_toggled(bool checked)
+{
     ui->country_entry->setFocus();
 
     if (checked) {
@@ -190,8 +236,7 @@ void Helper::on_gk_radiobutton_toggled(bool checked) {
         ui->stat4_label->setText(QString("SPD"));
         ui->stat5_label->setText(QString("KIC"));
         ui->stat6_label->setText(QString("POS"));
-    }
-    else {
+    } else {
         ui->stat1_label->setText(QString("PAC"));
         ui->stat2_label->setText(QString("DRI"));
         ui->stat3_label->setText(QString("SHO"));
@@ -201,39 +246,48 @@ void Helper::on_gk_radiobutton_toggled(bool checked) {
     }
 }
 
-void Helper::on_league_entry_editingFinished() {
+void Helper::on_league_entry_editingFinished()
+{
     qDebug() << "got here (league editing finished)" << ui->league_entry->text();
-    QCompleter *clubs_completer = new QCompleter(db.getClubsFromLeague(ui->league_entry->text()), this);
+    QCompleter *clubs_completer = new QCompleter(db.getClubsFromLeague(ui->league_entry->text()),
+                                                 this);
     clubs_completer->setCaseSensitivity(Qt::CaseInsensitive);
     clubs_completer->setFilterMode(Qt::MatchContains);
     ui->club_entry->setCompleter(clubs_completer);
 }
 
-void Helper::on_stat1_slider_valueChanged(int value) {
+void Helper::on_stat1_slider_valueChanged(int value)
+{
     ui->stat1_value_label->setNum(value);
 }
 
-void Helper::on_stat2_slider_valueChanged(int value) {
+void Helper::on_stat2_slider_valueChanged(int value)
+{
     ui->stat2_value_label->setNum(value);
 }
 
-void Helper::on_stat3_slider_valueChanged(int value) {
+void Helper::on_stat3_slider_valueChanged(int value)
+{
     ui->stat3_value_label->setNum(value);
 }
 
-void Helper::on_stat4_slider_valueChanged(int value) {
+void Helper::on_stat4_slider_valueChanged(int value)
+{
     ui->stat4_value_label->setNum(value);
 }
 
-void Helper::on_stat5_slider_valueChanged(int value) {
+void Helper::on_stat5_slider_valueChanged(int value)
+{
     ui->stat5_value_label->setNum(value);
 }
 
-void Helper::on_stat6_slider_valueChanged(int value) {
+void Helper::on_stat6_slider_valueChanged(int value)
+{
     ui->stat6_value_label->setNum(value);
 }
 
-void Helper::on_submit_pushbutton_pressed() {
+void Helper::on_submit_pushbutton_pressed()
+{
     const int id = db.getLastId() + 1;
     const QString name = capitalize(ui->name_entry->text());
     const int rating = ui->rating_slider->value();
@@ -273,8 +327,25 @@ void Helper::on_submit_pushbutton_pressed() {
         }
 
         if (no_problem) {
-            db.addCard(id, name, rating, position, secpos1, secpos2, secpos3, secpos4, secpos5, country, league,
-                       club, stat1, stat2, stat3, stat4, stat5, stat6, type);
+            db.addCard(id,
+                       name,
+                       rating,
+                       position,
+                       secpos1,
+                       secpos2,
+                       secpos3,
+                       secpos4,
+                       secpos5,
+                       country,
+                       league,
+                       club,
+                       stat1,
+                       stat2,
+                       stat3,
+                       stat4,
+                       stat5,
+                       stat6,
+                       type);
 
             QString last_added(QString("%1, %2, %3").arg(name).arg(rating).arg(type));
             ui->last_added_label->setText("(Last added: " + last_added + ")");
@@ -298,13 +369,14 @@ void Helper::on_submit_pushbutton_pressed() {
 
             if (players.contains(name)) {
                 QMessageBox msg_box;
-                msg_box.setText("The name you entered was already saved in the database. Are they the same "
-                                "player as one of these?");
+                msg_box.setText(
+                    "The name you entered was already saved in the database. Are they the same "
+                    "player as one of these?");
 
                 const auto players_info = db.getPlayerInfoByName(name);
                 QString info_display;
                 int compt = 0;
-                for (const QString& player_info : players_info) {
+                for (const QString &player_info : players_info) {
                     info_display += QString("%1. %2\n").arg(compt).arg(player_info);
                     compt++;
                 }
@@ -318,24 +390,29 @@ void Helper::on_submit_pushbutton_pressed() {
                     int same_player_id;
                     int row = 0;
                     if (players_info.size() > 1) {
-                        row = QInputDialog::getInt(&msg_box, "ID", "Enter the row of the corresponding player.",
-                                                   0, 0, players_info.size() - 1, 1);
+                        row = QInputDialog::getInt(&msg_box,
+                                                   "ID",
+                                                   "Enter the row of the corresponding player.",
+                                                   0,
+                                                   0,
+                                                   players_info.size() - 1,
+                                                   1);
                     }
-                    same_player_id = info_display.split('\n')[row].split(". ")[1].split(',')[0].toInt();
+                    same_player_id
+                        = info_display.split('\n')[row].split(". ")[1].split(',')[0].toInt();
                     db.addSamePlayer(same_player_id, id);
-                }
-                else {
+                } else {
                     db.addNewPlayer(id);
                 }
-            }
-            else {
+            } else {
                 db.addNewPlayer(id);
             }
         }
     }
 }
 
-void Helper::on_edit_pushbutton_pressed() {
+void Helper::on_edit_pushbutton_pressed()
+{
     const QStringList sec_positions = getSecPositions(checkboxes);
     const int nsecpos = sec_positions.size();
     const QString secpos1 = nsecpos >= 1 ? sec_positions[0] : "";
@@ -371,8 +448,21 @@ void Helper::on_edit_pushbutton_pressed() {
     if (no_problem) {
         qDebug() << "id = " << current_edit_id;
 
-        db.updateCard(current_edit_id, secpos1, secpos2, secpos3, secpos4, secpos5, country, league, club, stat1,
-                      stat2, stat3, stat4, stat5, stat6);
+        db.updateCard(current_edit_id,
+                      secpos1,
+                      secpos2,
+                      secpos3,
+                      secpos4,
+                      secpos5,
+                      country,
+                      league,
+                      club,
+                      stat1,
+                      stat2,
+                      stat3,
+                      stat4,
+                      stat5,
+                      stat6);
 
         ui->name_entry->clear();
         ui->country_entry->clear();
@@ -391,7 +481,8 @@ void Helper::on_edit_pushbutton_pressed() {
     }
 }
 
-void Helper::on_unfilled_listwidget_itemClicked(QListWidgetItem *item) {
+void Helper::on_unfilled_listwidget_itemClicked(QListWidgetItem *item)
+{
     current_edit_id = getIdFromStrRep(unfilled_cards, item->text());
     qDebug() << "id = " << current_edit_id;
     ui->tabWidget->setCurrentIndex(0);
@@ -399,7 +490,7 @@ void Helper::on_unfilled_listwidget_itemClicked(QListWidgetItem *item) {
     const QStringList selected_values = item->text().split(", ");
     ui->name_entry->setText(selected_values[0]);
     ui->rating_slider->setValue(selected_values[1].toInt());
-    for (auto& button : radio_buttons) {
+    for (auto &button : radio_buttons) {
         if (button->text() == selected_values[2]) {
             button->toggle();
         }
@@ -411,232 +502,309 @@ void Helper::on_unfilled_listwidget_itemClicked(QListWidgetItem *item) {
     ui->country_entry->setFocus();
 }
 
-void Helper::on_lw_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_lw_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_st_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_st_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_rw_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_rw_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_cam_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_cam_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_lm_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_lm_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_cm_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_cm_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_rm_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_rm_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_cdm_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_cdm_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_lb_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_lb_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_cb_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_cb_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_rb_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_rb_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_gk_checkbox_checkStateChanged(const Qt::CheckState &state) {
+void Helper::on_gk_checkbox_checkStateChanged(const Qt::CheckState &state)
+{
     if (state) {
         checkbox_count += 1;
-        if (checkbox_count == 5) lockUnchecked(checkboxes);
-    }
-    else {
-        if (checkbox_count == 5) unlockAll(checkboxes);
+        if (checkbox_count == 5)
+            lockUnchecked(checkboxes);
+    } else {
+        if (checkbox_count == 5)
+            unlockAll(checkboxes);
         checkbox_count -= 1;
     }
 }
 
-void Helper::on_long_search_checkbox_toggled(bool checked) {
+void Helper::on_long_search_checkbox_toggled(bool checked)
+{
     ui->time_budget_spinbox->setEnabled(checked);
 }
 
-void Helper::applyCriterion(SBC_Solver* s, const QString& crit) const {
+void Helper::applyCriterion(SBC_Solver *s, const QString &crit) const
+{
     const int lp = crit.indexOf('(');
     const int rp = crit.lastIndexOf(')');
-    if (lp < 0 || rp < lp) return;
+    if (lp < 0 || rp < lp)
+        return;
 
     const QString key = crit.left(lp).trimmed();
     const QString val = crit.mid(lp + 1, rp - lp - 1);
     const QStringList parts = val.split(',', Qt::SkipEmptyParts);
 
-    auto toInt = [](const QString& x){ return x.trimmed().toInt(); };
+    auto toInt = [](const QString &x) { return x.trimmed().toInt(); };
 
-    if (key == "Club")        for (const auto& v : parts) s->club(v.trimmed());
-    else if (key == "Clubs")  for (const auto& v : parts) s->club(v.trimmed());
-    else if (key == "Club=")  s->clubExactly(parts[0].trimmed(), toInt(parts[1]));
-    else if (key == "Club>=") s->clubAtLeast(parts[0].trimmed(), toInt(parts[1]));
-    else if (key == "Club<=") s->clubAtMost(parts[0].trimmed(), toInt(parts[1]));
+    if (key == "Club")
+        for (const auto &v : parts)
+            s->club(v.trimmed());
+    else if (key == "Clubs")
+        for (const auto &v : parts)
+            s->club(v.trimmed());
+    else if (key == "Club=")
+        s->clubExactly(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "Club>=")
+        s->clubAtLeast(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "Club<=")
+        s->clubAtMost(parts[0].trimmed(), toInt(parts[1]));
 
-    else if (key == "League")   for (const auto& v : parts) s->league(v.trimmed());
-    else if (key == "Leagues")  for (const auto& v : parts) s->league(v.trimmed());
-    else if (key == "League=")  s->leagueExactly(parts[0].trimmed(), toInt(parts[1]));
-    else if (key == "League>=") s->leagueAtLeast(parts[0].trimmed(), toInt(parts[1]));
-    else if (key == "League<=") s->leagueAtMost(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "League")
+        for (const auto &v : parts)
+            s->league(v.trimmed());
+    else if (key == "Leagues")
+        for (const auto &v : parts)
+            s->league(v.trimmed());
+    else if (key == "League=")
+        s->leagueExactly(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "League>=")
+        s->leagueAtLeast(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "League<=")
+        s->leagueAtMost(parts[0].trimmed(), toInt(parts[1]));
 
-    else if (key == "Nation")   for (const auto& v : parts) s->nation(v.trimmed());
-    else if (key == "Nations")  for (const auto& v : parts) s->nation(v.trimmed());
-    else if (key == "Nation=")  s->nationExactly(parts[0].trimmed(), toInt(parts[1]));
-    else if (key == "Nation>=") s->nationAtLeast(parts[0].trimmed(), toInt(parts[1]));
-    else if (key == "Nation<=") s->nationAtMost(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "Nation")
+        for (const auto &v : parts)
+            s->nation(v.trimmed());
+    else if (key == "Nations")
+        for (const auto &v : parts)
+            s->nation(v.trimmed());
+    else if (key == "Nation=")
+        s->nationExactly(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "Nation>=")
+        s->nationAtLeast(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "Nation<=")
+        s->nationAtMost(parts[0].trimmed(), toInt(parts[1]));
 
-    else if (key == "ExcludeTypes") s->excludeTypes(parts);
-    else if (key == "Types")        s->includeTypes(parts);
-    else if (key == "Type=")        s->typeExactly(parts[0].trimmed(), toInt(parts[1]));
-    else if (key == "Type>=")       s->typeAtLeast(parts[0].trimmed(), toInt(parts[1]));
-    else if (key == "Type<=")       s->typeAtMost(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "ExcludeTypes")
+        s->excludeTypes(parts);
+    else if (key == "Types")
+        s->includeTypes(parts);
+    else if (key == "Type=")
+        s->typeExactly(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "Type>=")
+        s->typeAtLeast(parts[0].trimmed(), toInt(parts[1]));
+    else if (key == "Type<=")
+        s->typeAtMost(parts[0].trimmed(), toInt(parts[1]));
 
-    else if (key == "Specials=")  s->specialExactly(toInt(parts[0]));
-    else if (key == "Specials>=") s->specialAtLeast(toInt(parts[0]));
-    else if (key == "Specials<=") s->specialAtMost(toInt(parts[0]));
+    else if (key == "Specials=")
+        s->specialExactly(toInt(parts[0]));
+    else if (key == "Specials>=")
+        s->specialAtLeast(toInt(parts[0]));
+    else if (key == "Specials<=")
+        s->specialAtMost(toInt(parts[0]));
 
-    else if (key == "IconHero=")  s->iconHeroExactly(toInt(parts[0]));
-    else if (key == "IconHero>=") s->iconHeroAtLeast(toInt(parts[0]));
-    else if (key == "IconHero<=") s->iconHeroAtMost(toInt(parts[0]));
+    else if (key == "IconHero=")
+        s->iconHeroExactly(toInt(parts[0]));
+    else if (key == "IconHero>=")
+        s->iconHeroAtLeast(toInt(parts[0]));
+    else if (key == "IconHero<=")
+        s->iconHeroAtMost(toInt(parts[0]));
 
-    else if (key == "MinNations")   s->minNations(toInt(parts[0]));
-    else if (key == "MaxNations")   s->maxNations(toInt(parts[0]));
-    else if (key == "MinTypes")     s->minTypes(toInt(parts[0]));
-    else if (key == "MaxTypes")     s->maxTypes(toInt(parts[0]));
-    else if (key == "MinClubs")     s->minClubs(toInt(parts[0]));
-    else if (key == "MaxClubs")     s->maxClubs(toInt(parts[0]));
-    else if (key == "MinLeagues")   s->minLeagues(toInt(parts[0]));
-    else if (key == "MaxLeagues")   s->maxLeagues(toInt(parts[0]));
-    else if (key == "MinAvgRating") s->minAvgRating(toInt(parts[0]));
-    else if (key == "MaxAvgRating") s->maxAvgRating(toInt(parts[0]));
-    else if (key == "MinChemistry") s->minChemistry(toInt(parts[0]));
-    else if (key == "MaxChemistry") s->maxChemistry(toInt(parts[0]));
+    else if (key == "MinNations")
+        s->minNations(toInt(parts[0]));
+    else if (key == "MaxNations")
+        s->maxNations(toInt(parts[0]));
+    else if (key == "MinTypes")
+        s->minTypes(toInt(parts[0]));
+    else if (key == "MaxTypes")
+        s->maxTypes(toInt(parts[0]));
+    else if (key == "MinClubs")
+        s->minClubs(toInt(parts[0]));
+    else if (key == "MaxClubs")
+        s->maxClubs(toInt(parts[0]));
+    else if (key == "MinLeagues")
+        s->minLeagues(toInt(parts[0]));
+    else if (key == "MaxLeagues")
+        s->maxLeagues(toInt(parts[0]));
+    else if (key == "MinAvgRating")
+        s->minAvgRating(toInt(parts[0]));
+    else if (key == "MaxAvgRating")
+        s->maxAvgRating(toInt(parts[0]));
+    else if (key == "MinChemistry")
+        s->minChemistry(toInt(parts[0]));
+    else if (key == "MaxChemistry")
+        s->maxChemistry(toInt(parts[0]));
 
-    else if (key == "FlexibleTypes") s->flexibleTypes(parts);
+    else if (key == "FlexibleTypes")
+        s->flexibleTypes(parts);
 
     else if (key == "Formation") {
         QVector<Slot> slots_;
         int no = 1;
         const QStringList positions = expandFormation(val);
-        for (const QString& p : positions) {
-            if (p.isEmpty()) continue;
-            slots_.append({ no++, p.trimmed() });
+        for (const QString &p : positions) {
+            if (p.isEmpty())
+                continue;
+            slots_.append({no++, p.trimmed()});
         }
         s->formation(slots_);
     }
 
     else if (key == "ExcludeCards") {
         QSet<int> ids;
-        for (const auto& v : parts) ids.insert(v.trimmed().toInt());
+        for (const auto &v : parts)
+            ids.insert(v.trimmed().toInt());
         s->excludeCardIds(ids);
     }
 
     else if (key == "IncludeCards") {
         QSet<int> ids;
-        for (const auto& v : parts) ids.insert(v.trimmed().toInt());
+        for (const auto &v : parts)
+            ids.insert(v.trimmed().toInt());
         s->includeCardIds(ids);
     }
 }
 
-void Helper::on_solve_button_clicked() {
+void Helper::on_solve_button_clicked()
+{
     if (ui->criteria_listwidget->count() == 0) {
         QMessageBox::warning(this, "SBC Solver", "Add at least one criterion first.");
         return;
     }
 
-    SBC_Solver* solver = buildSolverFromCriteria();
-    if (!solver) return;
+    SBC_Solver *solver = buildSolverFromCriteria();
+    if (!solver)
+        return;
 
     solver->prepare();
 
@@ -654,13 +822,14 @@ void Helper::on_solve_button_clicked() {
 
     m_runningSolver = solver;
 
-    auto* watcher = new QFutureWatcher<void>(this);
+    auto *watcher = new QFutureWatcher<void>(this);
     m_runningWatcher = watcher;
-    connect(watcher, &QFutureWatcher<void>::finished, this, [this, solver, watcher](){
+    connect(watcher, &QFutureWatcher<void>::finished, this, [this, solver, watcher]() {
         m_runningSolver = nullptr;
         m_runningWatcher = nullptr;
 
-        if (m_progressTimer) m_progressTimer->stop();
+        if (m_progressTimer)
+            m_progressTimer->stop();
         ui->solve_progress_label->setText("Finished");
         ui->solve_progress_bar->setValue(ui->solve_progress_bar->maximum());
 
@@ -685,38 +854,45 @@ void Helper::on_solve_button_clicked() {
         if ((nodeHit || timeHit) && solCount == 0) {
             QMessageBox dlg(this);
             dlg.setWindowTitle("Search incomplete");
-            dlg.setText(timeHit
-                            ? QString("The search reached its %1-second time limit without finding a solution.")
-                                  .arg(timeLimit)
-                            : "The search reached its node budget without finding a solution");
+            dlg.setText(
+                timeHit
+                    ? QString(
+                          "The search reached its %1-second time limit without finding a solution.")
+                          .arg(timeLimit)
+                    : "The search reached its node budget without finding a solution");
             dlg.setInformativeText("The criteria may still be satisfiable.");
             dlg.setDetailedText(report);
             dlg.exec();
-        }
-        else if (nodeHit || timeHit) {
-            QMessageBox::information(this, "Partial results",
-                                     QString("The search reached its %1 limit with %2 solution(s) found. "
-                                             "More may exist")
-                                         .arg(timeHit ? QString("%1-second time").arg(timeLimit) : "node")
-                                         .arg(solCount));
+        } else if (nodeHit || timeHit) {
+            QMessageBox::information(
+                this,
+                "Partial results",
+                QString("The search reached its %1 limit with %2 solution(s) found. "
+                        "More may exist")
+                    .arg(timeHit ? QString("%1-second time").arg(timeLimit) : "node")
+                    .arg(solCount));
         }
     });
 
-    watcher->setFuture(QtConcurrent::run([solver](){ solver->search(); }));
+    watcher->setFuture(QtConcurrent::run([solver]() { solver->search(); }));
 }
 
-void Helper::on_cancel_button_clicked() {
-    if (!m_runningSolver) return;
+void Helper::on_cancel_button_clicked()
+{
+    if (!m_runningSolver)
+        return;
 
     m_runningSolver->cancel();
-    if (m_progressTimer) m_progressTimer->stop();
+    if (m_progressTimer)
+        m_progressTimer->stop();
     ui->cancel_button->setEnabled(false);
     ui->solutionscount_label->setText("cancelling...");
     ui->solve_progress_label->setText("Cancelling...");
 }
 
-SBC_Solver* Helper::buildSolverFromCriteria() const {
-    auto* s = new SBC_Solver(db, 50, {"SBC Premium", "Evo", "Elite Evo", "LTM"});
+SBC_Solver *Helper::buildSolverFromCriteria() const
+{
+    auto *s = new SBC_Solver(db, 50, {"SBC Premium", "Evo", "Elite Evo", "LTM"});
 
     bool hasFormation = false;
     for (int i = 0; i < ui->criteria_listwidget->count(); ++i) {
@@ -727,8 +903,17 @@ SBC_Solver* Helper::buildSolverFromCriteria() const {
         }
     }
     if (!hasFormation) {
-        s->formation({{1,"GK"},{2,"LB"},{3,"CB"},{4,"CB"},{5,"RB"},
-                      {6,"CDM"},{7,"CDM"},{8,"CM"},{9,"LW"},{10,"ST"},{11,"RW"}});
+        s->formation({{1, "GK"},
+                      {2, "LB"},
+                      {3, "CB"},
+                      {4, "CB"},
+                      {5, "RB"},
+                      {6, "CDM"},
+                      {7, "CDM"},
+                      {8, "CM"},
+                      {9, "LW"},
+                      {10, "ST"},
+                      {11, "RW"}});
     }
 
     for (int i = 0; i < ui->criteria_listwidget->count(); ++i) {
@@ -738,29 +923,32 @@ SBC_Solver* Helper::buildSolverFromCriteria() const {
     if (ui->long_search_checkbox->isChecked()) {
         const double seconds = double(ui->time_budget_spinbox->value());
         s->maxNodes(0).maxSeconds(seconds);
-    }
-    else
+    } else
         s->maxNodes(5'000'000).maxSeconds(0.0);
 
     return s;
 }
 
-void Helper::displaySolutions(const QVector<SBC_Solver::Solution>& sols) {
+void Helper::displaySolutions(const QVector<SBC_Solver::Solution> &sols)
+{
     ui->solutionscount_label->setText(QString::number(sols.size()));
     ui->solutions_listwidget->clear();
 
     for (int r = 0; r < sols.size(); ++r) {
-        auto* item = new QListWidgetItem(QString("Solution %1 (cost %2)").arg(r + 1).arg(sols[r].totalCost));
+        auto *item = new QListWidgetItem(
+            QString("Solution %1 (cost %2)").arg(r + 1).arg(sols[r].totalCost));
         item->setData(Qt::UserRole, r);
         ui->solutions_listwidget->addItem(item);
     }
 }
 
-void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
+void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem *item)
+{
     const int idx = item->data(Qt::UserRole).toInt();
-    if (idx < 0 || idx >= m_currentSolutions.size()) return;
+    if (idx < 0 || idx >= m_currentSolutions.size())
+        return;
 
-    const auto& sol = m_currentSolutions[idx];
+    const auto &sol = m_currentSolutions[idx];
 
     QDialog dlg(this);
     dlg.setWindowTitle(QString("Solution %1").arg(idx + 1));
@@ -770,9 +958,10 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
         dlg.setMinimumSize(600, 450);
 
     // header: total rating + chemistry
-    auto* header = new QLabel(
-        QString("<b>Solution %1</b> &nbsp;—&nbsp; Rating: <b>%2</b> &nbsp;—&nbsp; Chemistry: <b>%3</b>"
-                " &nbsp;—&nbsp; Cost: <b>%4</b>")
+    auto *header = new QLabel(
+        QString(
+            "<b>Solution %1</b> &nbsp;—&nbsp; Rating: <b>%2</b> &nbsp;—&nbsp; Chemistry: <b>%3</b>"
+            " &nbsp;—&nbsp; Cost: <b>%4</b>")
             .arg(idx + 1)
             .arg(sol.gameRating)
             .arg(sol.chemistry)
@@ -781,15 +970,16 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
     header->setTextFormat(Qt::RichText);
 
     // table
-    auto* table = new QTableWidget(sol.chosen.size(), 8, &dlg);
-    table->setHorizontalHeaderLabels({"Slot", "Name", "Rating", "Nation", "Club", "Type", "Use", "Include"});
+    auto *table = new QTableWidget(sol.chosen.size(), 8, &dlg);
+    table->setHorizontalHeaderLabels(
+        {"Slot", "Name", "Rating", "Nation", "Club", "Type", "Use", "Include"});
     table->verticalHeader()->setVisible(false);
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->setSelectionMode(QAbstractItemView::NoSelection);
     table->setFocusPolicy(Qt::NoFocus);
     table->setShowGrid(false);
 
-    QHeaderView* hh = table->horizontalHeader();
+    QHeaderView *hh = table->horizontalHeader();
     hh->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     hh->setSectionResizeMode(1, QHeaderView::Stretch);
     hh->setSectionResizeMode(2, QHeaderView::ResizeToContents);
@@ -801,15 +991,17 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
 
     for (int s = 0; s < sol.chosen.size(); ++s) {
         const int cardIdx = sol.chosen[s];
-        if (cardIdx < 0 || cardIdx >= m_lastSolverCards.size()) continue;
+        if (cardIdx < 0 || cardIdx >= m_lastSolverCards.size())
+            continue;
 
-        const Card& c = m_lastSolverCards[cardIdx];
+        const Card &c = m_lastSolverCards[cardIdx];
         const QString pos = s < m_lastFormation.size() ? m_lastFormation[s].pos : QString("?");
 
         const TypeStyle st = styleFortype(c.type);
 
-        auto makeItem = [&](const QString& text, Qt::Alignment al = Qt::AlignLeft | Qt::AlignCenter){
-            auto* it = new QTableWidgetItem(text);
+        auto makeItem = [&](const QString &text,
+                            Qt::Alignment al = Qt::AlignLeft | Qt::AlignCenter) {
+            auto *it = new QTableWidgetItem(text);
             it->setTextAlignment(al);
             it->setBackground(st.bg);
             it->setForeground(st.fg);
@@ -822,19 +1014,19 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
         table->setItem(s, 3, makeItem(c.country));
         table->setItem(s, 4, makeItem(c.club));
 
-        auto* typeItem = makeItem(c.type, Qt::AlignCenter);
+        auto *typeItem = makeItem(c.type, Qt::AlignCenter);
         QFont tf = typeItem->font();
         tf.setBold(true);
         typeItem->setFont(tf);
         table->setItem(s, 5, typeItem);
 
-        auto* useItem = new QTableWidgetItem();
+        auto *useItem = new QTableWidgetItem();
         useItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
         useItem->setCheckState(Qt::Checked);
         useItem->setBackground(st.bg);
         table->setItem(s, 6, useItem);
 
-        auto* includeItem = new QTableWidgetItem();
+        auto *includeItem = new QTableWidgetItem();
         includeItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
         includeItem->setCheckState(Qt::Unchecked);
         includeItem->setBackground(st.bg);
@@ -844,14 +1036,14 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
     }
 
     // buttons: copy + close
-    auto* buttons = new QDialogButtonBox(&dlg);
-    auto* copyBtn = buttons->addButton("Copy lineup", QDialogButtonBox::ActionRole);
-    auto* excludeBtn = buttons->addButton("Exclude selected", QDialogButtonBox::ActionRole);
-    auto* includeBtn = buttons->addButton("Include selected", QDialogButtonBox::ActionRole);
-    auto* closeBtn = buttons->addButton(QDialogButtonBox::Close);
+    auto *buttons = new QDialogButtonBox(&dlg);
+    auto *copyBtn = buttons->addButton("Copy lineup", QDialogButtonBox::ActionRole);
+    auto *excludeBtn = buttons->addButton("Exclude selected", QDialogButtonBox::ActionRole);
+    auto *includeBtn = buttons->addButton("Include selected", QDialogButtonBox::ActionRole);
+    auto *closeBtn = buttons->addButton(QDialogButtonBox::Close);
 
     connect(closeBtn, &QPushButton::clicked, &dlg, &QDialog::reject);
-    connect(copyBtn, &QPushButton::clicked, &dlg, [&dlg, &sol, this, idx, copyBtn](){
+    connect(copyBtn, &QPushButton::clicked, &dlg, [&dlg, &sol, this, idx, copyBtn]() {
         QString tsv;
         tsv += QString("Solution %1\tRating %2\tChemistry %3\n")
                    .arg(idx + 1)
@@ -860,10 +1052,11 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
         tsv += "Slot\tName\tRating\tNation\tClub\tType\n";
         for (int s = 0; s < sol.chosen.size(); ++s) {
             const int cardIdx = sol.chosen[s];
-            if (cardIdx < 0 || cardIdx >= m_lastSolverCards.size()) continue;
-            const Card& c = m_lastSolverCards[cardIdx];
-            const QString pos = (s < m_lastFormation.size())
-                                    ? m_lastFormation[s].pos : QString("?");
+            if (cardIdx < 0 || cardIdx >= m_lastSolverCards.size())
+                continue;
+            const Card &c = m_lastSolverCards[cardIdx];
+            const QString pos = (s < m_lastFormation.size()) ? m_lastFormation[s].pos
+                                                             : QString("?");
 
             tsv += QString("%1\t%2\t%3\t%4\t%5\t%6\n")
                        .arg(pos)
@@ -875,27 +1068,27 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
         }
         QApplication::clipboard()->setText(tsv);
         copyBtn->setText("Copied!");
-        QTimer::singleShot(1200, copyBtn, [copyBtn](){ copyBtn->setText("Copy lineup"); });
+        QTimer::singleShot(1200, copyBtn, [copyBtn]() { copyBtn->setText("Copy lineup"); });
     });
     bool excludeAndResolve = false;
-    connect(excludeBtn, &QPushButton::clicked, &dlg, [&dlg, &excludeAndResolve](){
+    connect(excludeBtn, &QPushButton::clicked, &dlg, [&dlg, &excludeAndResolve]() {
         excludeAndResolve = true;
         dlg.accept();
     });
     bool includeAndResolve = false;
-    connect(includeBtn, &QPushButton::clicked, &dlg, [&dlg, &includeAndResolve](){
+    connect(includeBtn, &QPushButton::clicked, &dlg, [&dlg, &includeAndResolve]() {
         includeAndResolve = true;
         dlg.accept();
     });
 
-    auto* hint =
-        new QLabel("Uncheck a card to mark it as unusable, then click <b>Exclude selected</b> to re-solve."
-                            "You can also force to include cards with the right-most column.",
-                            &dlg);
+    auto *hint = new QLabel(
+        "Uncheck a card to mark it as unusable, then click <b>Exclude selected</b> to re-solve."
+        "You can also force to include cards with the right-most column.",
+        &dlg);
     hint->setTextFormat(Qt::RichText);
     hint->setWordWrap(true);
 
-    auto* v = new QVBoxLayout(&dlg);
+    auto *v = new QVBoxLayout(&dlg);
     v->addWidget(header);
     v->addWidget(table, 1);
     v->addWidget(hint);
@@ -906,15 +1099,18 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
     if (excludeAndResolve) {
         QSet<int> excluded;
         for (int s = 0; s < sol.chosen.size(); ++s) {
-            auto* it = table->item(s, 6);
-            if (!it || it->checkState() == Qt::Checked) continue;
+            auto *it = table->item(s, 6);
+            if (!it || it->checkState() == Qt::Checked)
+                continue;
             const int cardIdx = sol.chosen[s];
-            if (cardIdx < 0 || cardIdx >= m_lastSolverCards.size()) continue;
+            if (cardIdx < 0 || cardIdx >= m_lastSolverCards.size())
+                continue;
             excluded.insert(m_lastSolverCards[cardIdx].id);
         }
         if (!excluded.isEmpty()) {
             QStringList ids;
-            for (int id : excluded) ids << QString::number(id);
+            for (int id : excluded)
+                ids << QString::number(id);
             ui->criteria_listwidget->addItem(QString("ExcludeCards(%1)").arg(ids.join(',')));
             QTimer::singleShot(0, this, &Helper::on_solve_button_clicked);
         }
@@ -923,7 +1119,7 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
     if (includeAndResolve) {
         QStringList ids;
         for (int s = 0; s < sol.chosen.size(); ++s) {
-            auto* it = table->item(s, 7);
+            auto *it = table->item(s, 7);
             if (it && it->checkState() == Qt::Checked) {
                 const int cardIdx = sol.chosen[s];
                 if (cardIdx >= 0 && cardIdx < m_lastSolverCards.size())
@@ -939,23 +1135,29 @@ void Helper::on_solutions_listwidget_itemClicked(QListWidgetItem* item) {
     m_lastSolutionDialogSize = dlg.size();
 }
 
-void Helper::on_criteria_listwidget_itemClicked(QListWidgetItem* item) {
+void Helper::on_criteria_listwidget_itemClicked(QListWidgetItem *item)
+{
     delete ui->criteria_listwidget->takeItem(ui->criteria_listwidget->row(item));
 }
 
-void Helper::on_add_button_clicked() {
+void Helper::on_add_button_clicked()
+{
     AddCriterionDialog dlg(db, this);
 
-    if (dlg.exec() != QDialog::Accepted) return;
+    if (dlg.exec() != QDialog::Accepted)
+        return;
 
     const QString c = dlg.criterion();
-    if (c.isEmpty()) return;
+    if (c.isEmpty())
+        return;
 
     ui->criteria_listwidget->addItem(c);
 }
 
-void Helper::updateSolveProgress() {
-    if (!m_runningSolver) return;
+void Helper::updateSolveProgress()
+{
+    if (!m_runningSolver)
+        return;
 
     const quint64 nodes = m_runningSolver->nodeCount();
     const qint64 ms = m_runningSolver->elapsedMs();
@@ -964,11 +1166,9 @@ void Helper::updateSolveProgress() {
         const int maxMs = ui->time_budget_spinbox->value() * 1000;
         ui->solve_progress_bar->setRange(0, maxMs);
         ui->solve_progress_bar->setValue(qMin(static_cast<int>(ms), maxMs));
-        ui->solve_progress_label->setText(QString("Time: %1s / %2s")
-                                              .arg(ms / 1000.0, 0, 'f', 1)
-                                              .arg(maxMs / 1000));
-    }
-    else {
+        ui->solve_progress_label->setText(
+            QString("Time: %1s / %2s").arg(ms / 1000.0, 0, 'f', 1).arg(maxMs / 1000));
+    } else {
         const int maxNodes = 5000000;
         ui->solve_progress_bar->setRange(0, maxNodes);
         ui->solve_progress_bar->setValue(qMin(static_cast<int>(nodes), maxNodes));
@@ -976,7 +1176,8 @@ void Helper::updateSolveProgress() {
     }
 }
 
-void Helper::refreshSavedSbcs() {
+void Helper::refreshSavedSbcs()
+{
     QSettings settings(m_iniPath, QSettings::IniFormat);
     settings.beginGroup("SavedSBCs");
     QStringList keys = settings.childKeys();
@@ -988,18 +1189,24 @@ void Helper::refreshSavedSbcs() {
     ui->saved_sbc_combobox->addItems(keys);
 }
 
-void Helper::on_save_sbc_button_clicked() {
+void Helper::on_save_sbc_button_clicked()
+{
     if (ui->criteria_listwidget->count() == 0) {
         QMessageBox::warning(this, "Save SBC", "There are no criteria to save.");
         return;
     }
 
     bool ok;
-    QString name = QInputDialog::getText(this, "Save SBC", "Enter a name for this SBC:", QLineEdit::Normal,
-                                         ui->saved_sbc_combobox->currentText(), &ok);
+    QString name = QInputDialog::getText(this,
+                                         "Save SBC",
+                                         "Enter a name for this SBC:",
+                                         QLineEdit::Normal,
+                                         ui->saved_sbc_combobox->currentText(),
+                                         &ok);
     name = name.trimmed();
 
-    if (!ok || name.isEmpty()) return;
+    if (!ok || name.isEmpty())
+        return;
 
     QStringList criteria;
     for (int i = 0; i < ui->criteria_listwidget->count(); ++i) {
@@ -1010,8 +1217,11 @@ void Helper::on_save_sbc_button_clicked() {
     settings.beginGroup("SavedSBCs");
 
     if (settings.contains(name)) {
-        if (QMessageBox::question(this, "Overwrite", "An SBC with this name already exists. Overwrite?")
-            != QMessageBox::Yes) return;
+        if (QMessageBox::question(this,
+                                  "Overwrite",
+                                  "An SBC with this name already exists. Overwrite?")
+            != QMessageBox::Yes)
+            return;
     }
 
     settings.setValue(name, criteria);
@@ -1021,9 +1231,11 @@ void Helper::on_save_sbc_button_clicked() {
     ui->saved_sbc_combobox->setCurrentText(name);
 }
 
-void Helper::on_load_sbc_button_clicked() {
+void Helper::on_load_sbc_button_clicked()
+{
     QString name = ui->saved_sbc_combobox->currentText();
-    if (name.isEmpty()) return;
+    if (name.isEmpty())
+        return;
 
     QSettings settings(m_iniPath, QSettings::IniFormat);
     settings.beginGroup("SavedSBCs");
@@ -1034,13 +1246,18 @@ void Helper::on_load_sbc_button_clicked() {
     ui->criteria_listwidget->addItems(criteria);
 }
 
-void Helper::on_delete_sbc_button_clicked() {
+void Helper::on_delete_sbc_button_clicked()
+{
     QString name = ui->saved_sbc_combobox->currentText();
-    if (name.isEmpty()) return;
+    if (name.isEmpty())
+        return;
 
-    if (QMessageBox::question(this, "Delete SBC", QString("Are you sure you want to delete the saved SBC '%1'?")
-                                                      .arg(name))
-        != QMessageBox::Yes) return;
+    if (QMessageBox::question(this,
+                              "Delete SBC",
+                              QString("Are you sure you want to delete the saved SBC '%1'?")
+                                  .arg(name))
+        != QMessageBox::Yes)
+        return;
 
     QSettings settings(m_iniPath, QSettings::IniFormat);
     settings.beginGroup("SavedSBCs");
@@ -1049,9 +1266,3 @@ void Helper::on_delete_sbc_button_clicked() {
 
     refreshSavedSbcs();
 }
-
-
-
-
-
-

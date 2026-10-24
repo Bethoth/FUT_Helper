@@ -1,21 +1,23 @@
 #include "sbc_solver.h"
 
-#include <QtSql/QSqlQuery>
-#include <QtSql/QSqlError>
-#include <QtSql/QSqlRecord>
 #include <QElapsedTimer>
+#include <QtSql/QSqlError>
+#include <QtSql/QSqlQuery>
+#include <QtSql/QSqlRecord>
+#include <algorithm>
 #include <functional>
 #include <random>
-#include <algorithm>
 
-bool SBC_Solver::canSatisfyCount(int k, int minNeeded) const {
+bool SBC_Solver::canSatisfyCount(int k, int minNeeded) const
+{
     const int S = slots_.size();
 
     // Adjacency: for each formation slot, the cards that can occupy it AND satisfy constraint k
     QVector<QVector<int>> adj(S);
     for (int s = 0; s < S; ++s) {
         for (int i : slotCandidates[s]) {
-            if (m_cardCountBits[i] & (quint64(1) << k)) adj[s].append(i);
+            if (m_cardCountBits[i] & (quint64(1) << k))
+                adj[s].append(i);
         }
     }
 
@@ -26,7 +28,8 @@ bool SBC_Solver::canSatisfyCount(int k, int minNeeded) const {
         QVector<char> visited(cards.size(), 0);
         std::function<bool(int)> tryAugment = [&](int slot) -> bool {
             for (int i : adj[slot]) {
-                if (visited[i]) continue;
+                if (visited[i])
+                    continue;
                 visited[i] = 1;
                 if (!cardToSlot.contains(i)) {
                     cardToSlot[i] = slot;
@@ -39,269 +42,331 @@ bool SBC_Solver::canSatisfyCount(int k, int minNeeded) const {
             }
             return false;
         };
-        if (tryAugment(s)) ++matches;
+        if (tryAugment(s))
+            ++matches;
     }
     return matches >= minNeeded;
 }
 
-SBC_Solver::SBC_Solver(const DbManager& db, int maxSolutions, const QStringList& baseExcludeTypes)
-    : db(db), maxSolutions(maxSolutions), m_baseExcludeTypes(baseExcludeTypes) {}
+SBC_Solver::SBC_Solver(const DbManager &db, int maxSolutions, const QStringList &baseExcludeTypes)
+    : db(db)
+    , maxSolutions(maxSolutions)
+    , m_baseExcludeTypes(baseExcludeTypes)
+{}
 
-SBC_Solver& SBC_Solver::club(const QString& c) {
+SBC_Solver &SBC_Solver::club(const QString &c)
+{
     m_clubs.append(c);
     return *this;
 }
 
-SBC_Solver& SBC_Solver::clubs(const QStringList& cs) {
+SBC_Solver &SBC_Solver::clubs(const QStringList &cs)
+{
     m_clubs << cs;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::clubExactly(const QString& club, int n) {
+SBC_Solver &SBC_Solver::clubExactly(const QString &club, int n)
+{
     m_countConstraints.append({CountConstraint::Club, club, n, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::clubAtLeast(const QString& club, int n) {
+SBC_Solver &SBC_Solver::clubAtLeast(const QString &club, int n)
+{
     m_countConstraints.append({CountConstraint::Club, club, n, -1});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::clubAtMost(const QString& club, int n) {
+SBC_Solver &SBC_Solver::clubAtMost(const QString &club, int n)
+{
     m_countConstraints.append({CountConstraint::Club, club, 0, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::league(const QString& l) {
+SBC_Solver &SBC_Solver::league(const QString &l)
+{
     m_leagues.append(l);
     return *this;
 }
 
-SBC_Solver& SBC_Solver::leagues(const QStringList& ls) {
+SBC_Solver &SBC_Solver::leagues(const QStringList &ls)
+{
     m_leagues << ls;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::leagueExactly(const QString& league, int n) {
+SBC_Solver &SBC_Solver::leagueExactly(const QString &league, int n)
+{
     m_countConstraints.append({CountConstraint::League, league, n, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::leagueAtLeast(const QString& league, int n) {
+SBC_Solver &SBC_Solver::leagueAtLeast(const QString &league, int n)
+{
     m_countConstraints.append({CountConstraint::League, league, n, -1});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::leagueAtMost(const QString& league, int n) {
+SBC_Solver &SBC_Solver::leagueAtMost(const QString &league, int n)
+{
     m_countConstraints.append({CountConstraint::League, league, 0, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::nation(const QString& n) {
+SBC_Solver &SBC_Solver::nation(const QString &n)
+{
     m_nations.append(n);
     return *this;
 }
 
-SBC_Solver& SBC_Solver::nations(const QStringList& ns) {
+SBC_Solver &SBC_Solver::nations(const QStringList &ns)
+{
     m_nations << ns;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::nationExactly(const QString& nation, int n) {
+SBC_Solver &SBC_Solver::nationExactly(const QString &nation, int n)
+{
     m_countConstraints.append({CountConstraint::Nation, nation, n, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::nationAtLeast(const QString& nation, int n) {
+SBC_Solver &SBC_Solver::nationAtLeast(const QString &nation, int n)
+{
     m_countConstraints.append({CountConstraint::Nation, nation, n, -1});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::nationAtMost(const QString& nation, int n) {
+SBC_Solver &SBC_Solver::nationAtMost(const QString &nation, int n)
+{
     m_countConstraints.append({CountConstraint::Nation, nation, 0, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::includeTypes(const QStringList& ts) {
+SBC_Solver &SBC_Solver::includeTypes(const QStringList &ts)
+{
     m_includeTypes = ts;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::excludeTypes(const QStringList& ts) {
+SBC_Solver &SBC_Solver::excludeTypes(const QStringList &ts)
+{
     m_specificExcludeTypes << ts;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::typeExactly(const QString& type, int n) {
+SBC_Solver &SBC_Solver::typeExactly(const QString &type, int n)
+{
     m_countConstraints.append({CountConstraint::Type, type, n, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::typeAtLeast(const QString& type, int n) {
+SBC_Solver &SBC_Solver::typeAtLeast(const QString &type, int n)
+{
     m_countConstraints.append({CountConstraint::Type, type, n, -1});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::typeAtMost(const QString& type, int n) {
+SBC_Solver &SBC_Solver::typeAtMost(const QString &type, int n)
+{
     m_countConstraints.append({CountConstraint::Type, type, 0, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::specialExactly(int n) {
+SBC_Solver &SBC_Solver::specialExactly(int n)
+{
     m_countConstraints.append({CountConstraint::SpecialType, {}, n, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::specialAtLeast(int n) {
+SBC_Solver &SBC_Solver::specialAtLeast(int n)
+{
     m_countConstraints.append({CountConstraint::SpecialType, {}, n, -1});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::specialAtMost(int n) {
+SBC_Solver &SBC_Solver::specialAtMost(int n)
+{
     m_countConstraints.append({CountConstraint::SpecialType, {}, 0, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::iconHeroExactly(int n) {
+SBC_Solver &SBC_Solver::iconHeroExactly(int n)
+{
     m_countConstraints.append({CountConstraint::IconHeroType, {}, n, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::iconHeroAtLeast(int n) {
+SBC_Solver &SBC_Solver::iconHeroAtLeast(int n)
+{
     m_countConstraints.append({CountConstraint::IconHeroType, {}, n, -1});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::iconHeroAtMost(int n) {
+SBC_Solver &SBC_Solver::iconHeroAtMost(int n)
+{
     m_countConstraints.append({CountConstraint::IconHeroType, {}, 0, n});
     return *this;
 }
 
-SBC_Solver& SBC_Solver::minAvgRating(int r) {
+SBC_Solver &SBC_Solver::minAvgRating(int r)
+{
     m_minAvgRating = r;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::maxAvgRating(int r) {
+SBC_Solver &SBC_Solver::maxAvgRating(int r)
+{
     m_maxAvgRating = r;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::minNations(int n) {
+SBC_Solver &SBC_Solver::minNations(int n)
+{
     m_minNations = n;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::maxNations(int n) {
+SBC_Solver &SBC_Solver::maxNations(int n)
+{
     m_maxNations = n;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::minTypes(int n) {
+SBC_Solver &SBC_Solver::minTypes(int n)
+{
     m_minTypes = n;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::maxTypes(int n) {
+SBC_Solver &SBC_Solver::maxTypes(int n)
+{
     m_maxTypes = n;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::minClubs(int n) {
+SBC_Solver &SBC_Solver::minClubs(int n)
+{
     m_minClubs = n;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::maxClubs(int n) {
+SBC_Solver &SBC_Solver::maxClubs(int n)
+{
     m_maxClubs = n;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::minLeagues(int n) {
+SBC_Solver &SBC_Solver::minLeagues(int n)
+{
     m_minLeagues = n;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::maxLeagues(int n) {
+SBC_Solver &SBC_Solver::maxLeagues(int n)
+{
     m_maxLeagues = n;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::formation(const QVector<Slot>& formation) {
+SBC_Solver &SBC_Solver::formation(const QVector<Slot> &formation)
+{
     slots_ = formation;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::minChemistry(int c) {
+SBC_Solver &SBC_Solver::minChemistry(int c)
+{
     m_minChemistry = c;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::maxChemistry(int c) {
+SBC_Solver &SBC_Solver::maxChemistry(int c)
+{
     m_maxChemistry = c;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::flexibleTypes(const QStringList& ts) {
+SBC_Solver &SBC_Solver::flexibleTypes(const QStringList &ts)
+{
     m_flexibleTypes = ts;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::typeCost(const QString& type, int cost) {
+SBC_Solver &SBC_Solver::typeCost(const QString &type, int cost)
+{
     m_typeCost[type] = cost;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::excludeCardIds(const QSet<int>& ids) {
-    for (int id : ids) m_excludedCardIds.insert(id);
+SBC_Solver &SBC_Solver::excludeCardIds(const QSet<int> &ids)
+{
+    for (int id : ids)
+        m_excludedCardIds.insert(id);
     return *this;
 }
 
-SBC_Solver& SBC_Solver::includeCardIds(const QSet<int>& ids) {
-    for (int id : ids) m_includedCardIds.insert(id);
+SBC_Solver &SBC_Solver::includeCardIds(const QSet<int> &ids)
+{
+    for (int id : ids)
+        m_includedCardIds.insert(id);
     return *this;
 }
 
-SBC_Solver& SBC_Solver::maxNodes(quint64 n) {
+SBC_Solver &SBC_Solver::maxNodes(quint64 n)
+{
     m_maxNodes = n;
     return *this;
 }
 
-SBC_Solver& SBC_Solver::maxSeconds(double sec) {
+SBC_Solver &SBC_Solver::maxSeconds(double sec)
+{
     m_maxSeconds = sec;
     return *this;
 }
 
-int SBC_Solver::cardCost(const Card& c) const {
+int SBC_Solver::cardCost(const Card &c) const
+{
     auto it = m_typeCost.find(c.type);
-    if (it != m_typeCost.end()) return it.value();
+    if (it != m_typeCost.end())
+        return it.value();
 
     const QString t = c.type.toLower();
     const int r = c.rating;
 
     // Silver / bronze: no surcharge
-    if (t == "bronze") return 3;
-    if (t == "silver") return 2;
+    if (t == "bronze")
+        return 3;
+    if (t == "silver")
+        return 2;
 
     const bool isGold = t == "gold";
 
     int ratingAdd = 0;
     if (isGold) {
-        if      (r >= 88) ratingAdd = 3;
-        else if (r >= 84) ratingAdd = 2;
-        else if (r >= 80) ratingAdd = 1;
-    }
-    else {
-        if      (r >= 95) ratingAdd = 4;
-        else if (r >= 90) ratingAdd = 3;
-        else if (r >= 85) ratingAdd = 2;
-        else if (r >= 80) ratingAdd = 1;
+        if (r >= 88)
+            ratingAdd = 3;
+        else if (r >= 84)
+            ratingAdd = 2;
+        else if (r >= 80)
+            ratingAdd = 1;
+    } else {
+        if (r >= 95)
+            ratingAdd = 4;
+        else if (r >= 90)
+            ratingAdd = 3;
+        else if (r >= 85)
+            ratingAdd = 2;
+        else if (r >= 80)
+            ratingAdd = 1;
     }
 
     return (isGold ? 0 : 3) + ratingAdd;
 }
 
-void SBC_Solver::prepare() {
+void SBC_Solver::prepare()
+{
     m_prepared = false;
 
     cards.clear();
@@ -346,52 +411,66 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
     QVariantList binds;
     if (!m_clubs.empty()) {
         QStringList ph;
-        for (int i = 0; i < m_clubs.size(); ++i) ph << "?";
+        for (int i = 0; i < m_clubs.size(); ++i)
+            ph << "?";
         sql += " AND c.club IN (" + ph.join(",") + ")";
-        for (const QString& c : m_clubs) binds << c;
+        for (const QString &c : m_clubs)
+            binds << c;
     }
     if (!m_leagues.empty()) {
         QStringList ph;
-        for (int i = 0; i < m_leagues.size(); ++i) ph << "?";
+        for (int i = 0; i < m_leagues.size(); ++i)
+            ph << "?";
         sql += " AND c.league IN (" + ph.join(",") + ")";
-        for (const QString& l : m_leagues) binds << l;
+        for (const QString &l : m_leagues)
+            binds << l;
     }
     if (!m_nations.empty()) {
         QStringList ph;
-        for (int i = 0; i < m_nations.size(); ++i) ph << "?";
+        for (int i = 0; i < m_nations.size(); ++i)
+            ph << "?";
         sql += " AND c.country IN (" + ph.join(",") + ")";
-        for (const QString& n : m_nations) binds << n;
+        for (const QString &n : m_nations)
+            binds << n;
     }
     if (!m_includeTypes.empty()) {
         QStringList ph;
-        for (int i = 0; i < m_includeTypes.size(); ++i) ph << "?";
+        for (int i = 0; i < m_includeTypes.size(); ++i)
+            ph << "?";
         sql += " AND c.type IN (" + ph.join(",") + ")";
-        for (const QString& t : m_includeTypes) binds << t;
+        for (const QString &t : m_includeTypes)
+            binds << t;
     }
     if (!m_baseExcludeTypes.empty()) {
         QStringList ph;
-        for (int i = 0; i < m_baseExcludeTypes.size(); ++i) ph << "?";
+        for (int i = 0; i < m_baseExcludeTypes.size(); ++i)
+            ph << "?";
         sql += " AND c.type NOT IN (" + ph.join(",") + ")";
-        for (const QString& t : m_baseExcludeTypes) binds << t;
+        for (const QString &t : m_baseExcludeTypes)
+            binds << t;
     }
     if (!m_specificExcludeTypes.empty()) {
         QStringList ph;
-        for (int i = 0; i < m_specificExcludeTypes.size(); ++i) ph << "?";
+        for (int i = 0; i < m_specificExcludeTypes.size(); ++i)
+            ph << "?";
         sql += " AND c.type NOT IN (" + ph.join(",") + ")";
-        for (const QString& t : m_specificExcludeTypes) binds << t;
+        for (const QString &t : m_specificExcludeTypes)
+            binds << t;
     }
     sql += " ORDER BY c.id";
 
     QSqlQuery query;
     query.prepare(sql);
-    for (const QVariant& b : binds) query.addBindValue(b);
+    for (const QVariant &b : binds)
+        query.addBindValue(b);
     if (!query.exec()) {
         qDebug() << "Candidates query failed:" << query.lastError().text();
         return;
     }
     while (query.next()) {
         const int cid = query.value(0).toInt();
-        if (m_excludedCardIds.contains(cid)) continue;
+        if (m_excludedCardIds.contains(cid))
+            continue;
 
         Card c;
         c.id = query.value(0).toInt();
@@ -400,7 +479,8 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
         c.positions << query.value(3).toString();
         for (int i = 4; i <= 8; ++i) {
             const QVariant v = query.value(i);
-            if (v.isNull()) continue;
+            if (v.isNull())
+                continue;
             const QString s = v.toString();
             if (!s.isEmpty() && !c.positions.contains(s))
                 c.positions << s;
@@ -420,7 +500,8 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
     std::mt19937 g(rd());
     std::shuffle(cards.begin(), cards.end(), g);
     idToIdx.clear();
-    for (int i = 0; i < N; ++i) idToIdx[cards[i].id] = i;
+    for (int i = 0; i < N; ++i)
+        idToIdx[cards[i].id] = i;
 
     cardNationBit.resize(N);
     cardTypeBit.resize(N);
@@ -428,27 +509,32 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
     cardLeagueBit.resize(N);
     int nBit = 0, tBit = 0, cBit = 0, lBit = 0;
     for (int i = 0; i < N; ++i) {
-        const Card& c = cards[i];
+        const Card &c = cards[i];
 
-        if (!nationBit.contains(c.country)) nationBit[c.country] = nBit++;
-        if (!typeBit.contains(c.type)) typeBit[c.type] = tBit++;
-        if (!leagueBit.contains(c.league)) leagueBit[c.league] = lBit++;
+        if (!nationBit.contains(c.country))
+            nationBit[c.country] = nBit++;
+        if (!typeBit.contains(c.type))
+            typeBit[c.type] = tBit++;
+        if (!leagueBit.contains(c.league))
+            leagueBit[c.league] = lBit++;
 
         cardNationBit[i] = 1 << nationBit[c.country];
         cardTypeBit[i] = 1 << typeBit[c.type];
         cardLeagueBit[i] = 1 << leagueBit[c.league];
 
         // club can be empty (icons, heroes, ...) so special treatment
-        if (c.club.isEmpty()) cardClubBit[i] = 0;
+        if (c.club.isEmpty())
+            cardClubBit[i] = 0;
         else {
-            if (!clubBit.contains(c.club)) clubBit[c.club] = cBit++;
+            if (!clubBit.contains(c.club))
+                clubBit[c.club] = cBit++;
             cardClubBit[i] = 1 << clubBit[c.club];
         }
     }
 
     slotCandidates.assign(slots_.size(), {});
     for (int s = 0; s < slots_.size(); ++s) {
-        const QString& pos = slots_[s].pos;
+        const QString &pos = slots_[s].pos;
         for (int i = 0; i < N; ++i) {
             if (cards[i].positions.contains(pos)) {
                 slotCandidates[s].append(i);
@@ -461,16 +547,17 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
     QVector<int> parent(N);
     std::iota(parent.begin(), parent.end(), 0);
 
-    std::function<int(int)> findRoot = [&](int x){
+    std::function<int(int)> findRoot = [&](int x) {
         while (parent[x] != x) {
             parent[x] = parent[parent[x]];
             x = parent[x];
         }
         return x;
     };
-    auto unite = [&](int a, int b){
+    auto unite = [&](int a, int b) {
         const int ra = findRoot(a), rb = findRoot(b);
-        if (ra != rb) parent[ra] = rb;
+        if (ra != rb)
+            parent[ra] = rb;
     };
 
     QSqlQuery spq;
@@ -480,7 +567,8 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
             const int b = spq.value(1).toInt();
             auto ia = idToIdx.find(a);
             auto ib = idToIdx.find(b);
-            if (ia == idToIdx.end() || ib == idToIdx.end()) continue;
+            if (ia == idToIdx.end() || ib == idToIdx.end())
+                continue;
             unite(*ia, *ib);
         }
     }
@@ -492,8 +580,9 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
 
     conflicts.assign(N, {});
     for (auto it = groups.constBegin(); it != groups.constEnd(); ++it) {
-        const QVector<int>& members = it.value();
-        if (members.size() < 2) continue;
+        const QVector<int> &members = it.value();
+        if (members.size() < 2)
+            continue;
         for (int i = 0; i < members.size(); ++i) {
             for (int j = i + 1; j < members.size(); ++j) {
                 const int a = members[i], b = members[j];
@@ -507,7 +596,7 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
 
     QVector<int> order(slots_.size());
     std::iota(order.begin(), order.end(), 0);
-    std::stable_sort(order.begin(), order.end(), [&](int a, int b){
+    std::stable_sort(order.begin(), order.end(), [&](int a, int b) {
         return slotCandidates[a].size() < slotCandidates[b].size();
     });
     orderedSlots.clear();
@@ -516,8 +605,8 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
         orderedSlots.append(slots_[s]);
         orderedSlotsCandidates.append(slotCandidates[s]);
     }
-    for (auto& lst : orderedSlotsCandidates) {
-        std::stable_sort(lst.begin(), lst.end(), [&](int a, int b){
+    for (auto &lst : orderedSlotsCandidates) {
+        std::stable_sort(lst.begin(), lst.end(), [&](int a, int b) {
             return cardCost(cards[a]) < cardCost(cards[b]);
         });
     }
@@ -530,7 +619,7 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
     QHash<QString, int> posGroup;
     slotGroup.resize(orderedSlots.size());
     for (int i = 0; i < orderedSlots.size(); ++i) {
-        const QString& p = orderedSlots[i].pos;
+        const QString &p = orderedSlots[i].pos;
         if (!posGroup.contains(p)) {
             posGroup[p] = numGroups++;
         }
@@ -564,7 +653,8 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
             slotMin = qMin(slotMin, cards[idx].rating);
             slotMax = qMax(slotMax, cards[idx].rating);
         }
-        if (slotMin == INT_MAX) slotMin = 0; // empty slot: no contribution
+        if (slotMin == INT_MAX)
+            slotMin = 0; // empty slot: no contribution
         minSum += slotMin;
         maxSum += slotMax;
         suffixRatingMinSum[s] = minSum;
@@ -583,19 +673,31 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
     for (int i = 0; i < N; ++i) {
         quint64 bits = 0;
         for (int k = 0; k < C && k < 64; ++k) {
-            const auto& cc = m_countConstraints[k];
+            const auto &cc = m_countConstraints[k];
             bool matches = false;
             switch (cc.field) {
-            case CountConstraint::Club: matches = !cards[i].club.isEmpty() && cards[i].club == cc.value; break;
-            case CountConstraint::League: matches = cards[i].league == cc.value; break;
-            case CountConstraint::Nation: matches = cards[i].country == cc.value; break;
-            case CountConstraint::Type: matches = cards[i].type == cc.value; break;
-            case CountConstraint::SpecialType: matches = isSpecialType(cards[i].type); break;
+            case CountConstraint::Club:
+                matches = !cards[i].club.isEmpty() && cards[i].club == cc.value;
+                break;
+            case CountConstraint::League:
+                matches = cards[i].league == cc.value;
+                break;
+            case CountConstraint::Nation:
+                matches = cards[i].country == cc.value;
+                break;
+            case CountConstraint::Type:
+                matches = cards[i].type == cc.value;
+                break;
+            case CountConstraint::SpecialType:
+                matches = isSpecialType(cards[i].type);
+                break;
             case CountConstraint::IconHeroType:
-                matches = cards[i].type == "Icon" || cards[i].type == "Hero" || cards[i].type == "Hall of FUT";
+                matches = cards[i].type == "Icon" || cards[i].type == "Hero"
+                          || cards[i].type == "Hall of FUT";
                 break;
             }
-            if (matches) bits |= (quint64(1) << k);
+            if (matches)
+                bits |= (quint64(1) << k);
         }
         m_cardCountBits[i] = bits;
     }
@@ -625,7 +727,8 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
             slotMin = qMin(slotMin, k);
             slotMax = qMax(slotMax, k);
         }
-        if (slotMin == INT_MAX) slotMin = 0;
+        if (slotMin == INT_MAX)
+            slotMin = 0;
         costMin += slotMin;
         costMax += slotMax;
         suffixMinCost[s] = costMin;
@@ -635,19 +738,22 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
     m_maxPossibleCost = suffixMaxCost[0];
 
     int poolMin = INT_MAX, poolMax = 0;
-    for (const Card& c : cards) {
+    for (const Card &c : cards) {
         poolMin = qMin(poolMin, c.rating);
         poolMax = qMax(poolMax, c.rating);
     }
-    if (poolMin == INT_MAX) poolMin = 0;
+    if (poolMin == INT_MAX)
+        poolMin = 0;
     m_ratingBonusSlack = double(poolMax - poolMin) / 4.0; // theoretical value
 
     m_specificExcludeTypes.clear();
     m_prepared = true;
 }
 
-void SBC_Solver::search() {
-    Q_ASSERT_X(m_prepared, "SBC_Solver::search",
+void SBC_Solver::search()
+{
+    Q_ASSERT_X(m_prepared,
+               "SBC_Solver::search",
                "prepare() must be called (on the main thread) before search()");
 
     if (!m_prepared) {
@@ -655,7 +761,7 @@ void SBC_Solver::search() {
         return;
     }
 
-    auto cannotSatisfy = [&](const QString& name, int requested, int available){
+    auto cannotSatisfy = [&](const QString &name, int requested, int available) {
         if (requested > available) {
             qWarning() << name << requested << "impossible: pool only has" << available;
             return true;
@@ -663,16 +769,21 @@ void SBC_Solver::search() {
         return false;
     };
 
-    if (cannotSatisfy("MinNations", m_minNations, popcount(suffixNationAvail[0]))) return;
-    if (cannotSatisfy("MinTypes", m_minTypes, popcount(suffixTypeAvail[0])))       return;
-    if (cannotSatisfy("MinClubs", m_minClubs, popcount(suffixClubAvail[0])))       return;
-    if (cannotSatisfy("MinLeagues", m_minLeagues, popcount(suffixLeagueAvail[0]))) return;
+    if (cannotSatisfy("MinNations", m_minNations, popcount(suffixNationAvail[0])))
+        return;
+    if (cannotSatisfy("MinTypes", m_minTypes, popcount(suffixTypeAvail[0])))
+        return;
+    if (cannotSatisfy("MinClubs", m_minClubs, popcount(suffixClubAvail[0])))
+        return;
+    if (cannotSatisfy("MinLeagues", m_minLeagues, popcount(suffixLeagueAvail[0])))
+        return;
 
     for (int k = 0; k < m_countConstraints.size(); ++k) {
-        if (m_constraintMin[k] <= 0) continue;
+        if (m_constraintMin[k] <= 0)
+            continue;
         if (m_constraintMin[k] > suffixCountAvail[0][k]) {
-            qWarning() << "Count constrait #" << k << "requires" << m_constraintMin[k] << "matches but only"
-                       << suffixCountAvail[0][k] << "slots can host one";
+            qWarning() << "Count constrait #" << k << "requires" << m_constraintMin[k]
+                       << "matches but only" << suffixCountAvail[0][k] << "slots can host one";
             return;
         }
     }
@@ -681,9 +792,11 @@ void SBC_Solver::search() {
     // structural impossibilities the suffix prune cannot see (e.g. 7 required but only 6 cards fit in the slots
     // that would accept them, despite 8 slots having candidates).
     for (int k = 0; k < m_countConstraints.size(); ++k) {
-        if (m_constraintMin[k] <= 0) continue;
+        if (m_constraintMin[k] <= 0)
+            continue;
         if (!canSatisfyCount(k, m_constraintMin[k])) {
-            qWarning() << "Count constraint #" << k << "requires" << m_constraintMin[k] << "matches but no valid"
+            qWarning() << "Count constraint #" << k << "requires" << m_constraintMin[k]
+                       << "matches but no valid"
                        << "slot <-> card assignment achieves it";
             return;
         }
@@ -705,49 +818,58 @@ void SBC_Solver::search() {
     QVector<int> lastIdPerGroup(numGroups, -1);
     QVector<int> countHits(m_countConstraints.size(), 0);
 
-    QElapsedTimer timer; timer.start();
+    QElapsedTimer timer;
+    timer.start();
 
     recurse(0, chosen, used, lastIdPerGroup, countHits, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, INT_MAX);
 
-    std::stable_sort(results.begin(), results.end(), [](const Solution& a, const Solution& b){
+    std::stable_sort(results.begin(), results.end(), [](const Solution &a, const Solution &b) {
         return a.totalCost < b.totalCost;
     });
 
     if (m_hitNodeBudget)
-        qWarning() << "Node budget exceeded after" << m_nodeCount.load() << "nodes," << results.size()
-                   << "solutions found";
+        qWarning() << "Node budget exceeded after" << m_nodeCount.load() << "nodes,"
+                   << results.size() << "solutions found";
     else if (m_hitTimeBudget)
         qWarning() << "Time budget exceeded after" << m_searchTimer.elapsed() << "ms,"
-                   << results.size() << "solutions found,"
-                   << m_nodeCount.load() << "nodes explored";
+                   << results.size() << "solutions found," << m_nodeCount.load()
+                   << "nodes explored";
     else
-        qDebug() << "Search finalised in" << timer.elapsed() << "ms,"
-                 << results.size() << "solutions found,"
-                 << m_nodeCount.load() << "nodes explored"
+        qDebug() << "Search finalised in" << timer.elapsed() << "ms," << results.size()
+                 << "solutions found," << m_nodeCount.load() << "nodes explored"
                  << (aborted ? "(stopped early)" : "(exhausted)");
 
     qDebug().noquote() << leafRejectionReport();
 }
 
-void SBC_Solver::solve() {
+void SBC_Solver::solve()
+{
     prepare();
     search();
 }
 
 void SBC_Solver::recurse(int slotIdx,
-                         QVector<int>& chosen,
-                         QVector<char>& used,
-                         QVector<int>& lastIdPerGroup,
-                         QVector<int>& countHits,
+                         QVector<int> &chosen,
+                         QVector<char> &used,
+                         QVector<int> &lastIdPerGroup,
+                         QVector<int> &countHits,
                          int requiredPlacedCount,
-                         int nationMask, int nationCount,
-                         int typeMask, int typeCount,
-                         int clubMask, int clubCount,
-                         int leagueMask, int leagueCount,
+                         int nationMask,
+                         int nationCount,
+                         int typeMask,
+                         int typeCount,
+                         int clubMask,
+                         int clubCount,
+                         int leagueMask,
+                         int leagueCount,
                          int totalRating,
-                         int totalCost, int costCap) {
-    if (aborted) return;
-    if (costCap != INT_MAX && totalCost > costCap) return;
+                         int totalCost,
+                         int costCap)
+{
+    if (aborted)
+        return;
+    if (costCap != INT_MAX && totalCost > costCap)
+        return;
 
     ++m_nodeCount;
 
@@ -770,7 +892,8 @@ void SBC_Solver::recurse(int slotIdx,
         }
     }
 
-    if (requiredPlacedCount + (orderedSlots.size() - slotIdx) < m_includedCardIds.size()) return;
+    if (requiredPlacedCount + (orderedSlots.size() - slotIdx) < m_includedCardIds.size())
+        return;
 
     if (slotIdx == orderedSlots.size()) {
         if (costCap != INT_MAX && totalCost != costCap) {
@@ -789,18 +912,48 @@ void SBC_Solver::recurse(int slotIdx,
             }
         }
 
-        if (nationCount < m_minNations) { m_leafOutcomes[LeafMinNations]++; return; }
-        if (nationCount > m_maxNations) { m_leafOutcomes[LeafMaxNations]++; return; }
-        if (typeCount < m_minTypes)     { m_leafOutcomes[LeafMinTypes]++; return; }
-        if (typeCount > m_maxTypes)     { m_leafOutcomes[LeafMaxTypes]++; return; }
-        if (clubCount < m_minClubs)     { m_leafOutcomes[LeafMinClubs]++; return; }
-        if (clubCount > m_maxClubs)     { m_leafOutcomes[LeafMaxClubs]++; return; }
-        if (leagueCount < m_minLeagues) { m_leafOutcomes[LeafMinLeagues]++; return; }
-        if (leagueCount > m_maxLeagues) { m_leafOutcomes[LeafMaxLeagues]++; return; }
+        if (nationCount < m_minNations) {
+            m_leafOutcomes[LeafMinNations]++;
+            return;
+        }
+        if (nationCount > m_maxNations) {
+            m_leafOutcomes[LeafMaxNations]++;
+            return;
+        }
+        if (typeCount < m_minTypes) {
+            m_leafOutcomes[LeafMinTypes]++;
+            return;
+        }
+        if (typeCount > m_maxTypes) {
+            m_leafOutcomes[LeafMaxTypes]++;
+            return;
+        }
+        if (clubCount < m_minClubs) {
+            m_leafOutcomes[LeafMinClubs]++;
+            return;
+        }
+        if (clubCount > m_maxClubs) {
+            m_leafOutcomes[LeafMaxClubs]++;
+            return;
+        }
+        if (leagueCount < m_minLeagues) {
+            m_leafOutcomes[LeafMinLeagues]++;
+            return;
+        }
+        if (leagueCount > m_maxLeagues) {
+            m_leafOutcomes[LeafMaxLeagues]++;
+            return;
+        }
 
         const double gameRating = computeRating(chosen);
-        if (gameRating < double(m_minAvgRating)) { m_leafOutcomes[LeafMinRating]++; return; }
-        if (gameRating > double(m_maxAvgRating)) { m_leafOutcomes[LeafMaxRating]++; return; }
+        if (gameRating < double(m_minAvgRating)) {
+            m_leafOutcomes[LeafMinRating]++;
+            return;
+        }
+        if (gameRating > double(m_maxAvgRating)) {
+            m_leafOutcomes[LeafMaxRating]++;
+            return;
+        }
 
         const int chem = computeChemistry(chosen);
         if (chem < m_minChemistry) {
@@ -831,41 +984,56 @@ void SBC_Solver::recurse(int slotIdx,
         sol.gameRating = gameRating;
         results.append(sol);
 
-        if (results.size() >= maxSolutions) aborted = true;
+        if (results.size() >= maxSolutions)
+            aborted = true;
         return;
     }
 
     for (int k = 0; k < m_countConstraints.size(); ++k) {
-        if (countHits[k] + suffixCountAvail[slotIdx][k] < m_constraintMin[k]) return;
+        if (countHits[k] + suffixCountAvail[slotIdx][k] < m_constraintMin[k])
+            return;
     }
 
     const int remaining = orderedSlots.size() - slotIdx;
 
     const int newNations = popcount(suffixNationAvail[slotIdx] & ~nationMask);
-    if (nationCount + qMin(remaining, newNations) < m_minNations) return;
+    if (nationCount + qMin(remaining, newNations) < m_minNations)
+        return;
 
     const int newTypes = popcount(suffixTypeAvail[slotIdx] & ~typeMask);
-    if (typeCount + qMin(remaining, newTypes) < m_minTypes) return;
+    if (typeCount + qMin(remaining, newTypes) < m_minTypes)
+        return;
 
     const int newClubs = popcount(suffixClubAvail[slotIdx] & ~clubMask);
-    if (clubCount + qMin(remaining, newClubs) < m_minClubs) return;
+    if (clubCount + qMin(remaining, newClubs) < m_minClubs)
+        return;
 
     const int newLeagues = popcount(suffixLeagueAvail[slotIdx] & ~leagueMask);
-    if (leagueCount + qMin(remaining, newLeagues) < m_minLeagues) return;
+    if (leagueCount + qMin(remaining, newLeagues) < m_minLeagues)
+        return;
 
-    if (nationCount > m_maxNations) return;
-    if (typeCount > m_maxTypes) return;
-    if (clubCount > m_maxClubs) return;
-    if (leagueCount > m_maxLeagues) return;
+    if (nationCount > m_maxNations)
+        return;
+    if (typeCount > m_maxTypes)
+        return;
+    if (clubCount > m_maxClubs)
+        return;
+    if (leagueCount > m_maxLeagues)
+        return;
 
     const double N = double(orderedSlots.size());
     const double minPossibleRating = double(totalRating + suffixRatingMinSum[slotIdx]) / N;
-    const double maxPossibleRating = double(totalRating + suffixRatingMaxSum[slotIdx]) / N + m_ratingBonusSlack;
-    if (minPossibleRating > double(m_maxAvgRating)) return;
-    if (maxPossibleRating < double(m_minAvgRating)) return;
+    const double maxPossibleRating = double(totalRating + suffixRatingMaxSum[slotIdx]) / N
+                                     + m_ratingBonusSlack;
+    if (minPossibleRating > double(m_maxAvgRating))
+        return;
+    if (maxPossibleRating < double(m_minAvgRating))
+        return;
 
-    if (costCap != INT_MAX && totalCost + suffixMinCost[slotIdx] > costCap) return;
-    if (costCap != INT_MAX && totalCost + suffixMaxCost[slotIdx] < costCap) return;
+    if (costCap != INT_MAX && totalCost + suffixMinCost[slotIdx] > costCap)
+        return;
+    if (costCap != INT_MAX && totalCost + suffixMaxCost[slotIdx] < costCap)
+        return;
 
     const int grp = slotGroup[slotIdx];
     const int minIdSoFar = lastIdPerGroup[grp];
@@ -873,7 +1041,8 @@ void SBC_Solver::recurse(int slotIdx,
     QVector<char> forced(m_countConstraints.size(), 0);
     bool anyForced = false;
     for (int k = 0; k < m_countConstraints.size(); ++k) {
-        if (m_constraintMin[k] <= 0) continue;
+        if (m_constraintMin[k] <= 0)
+            continue;
         // If we have exactly enough slots left to meet the minimum
         if (countHits[k] + suffixCountAvail[slotIdx][k] == m_constraintMin[k]) {
             bool slotCanMatch = false;
@@ -891,23 +1060,27 @@ void SBC_Solver::recurse(int slotIdx,
     }
 
     bool forceNewType = typeCount + qMin(remaining, newTypes) == m_minTypes && newTypes > 0;
-    bool forceNewNation = nationCount + qMin(remaining, newNations) == m_minNations && newNations > 0;
+    bool forceNewNation = nationCount + qMin(remaining, newNations) == m_minNations
+                          && newNations > 0;
     bool forceNewClub = clubCount + qMin(remaining, newClubs) == m_minClubs && newClubs > 0;
-    bool forceNewLeague = leagueCount + qMin(remaining, newLeagues) == m_minLeagues && newLeagues > 0;
+    bool forceNewLeague = leagueCount + qMin(remaining, newLeagues) == m_minLeagues
+                          && newLeagues > 0;
 
     // Dynamic Heuristic Sorting
     // If we are at risk of missing a min-constraint, score candidates based on how much diversity they provide
     // and sort them to explore them first
 
     // We add 1 to the minima to start prioritising slightly before it is forced
-    bool needTypes =
-        typeCount + qMin(remaining, popcount(suffixTypeAvail[slotIdx] & ~typeMask)) < m_minTypes + 1;
-    bool needNations =
-        nationCount + qMin(remaining, popcount(suffixNationAvail[slotIdx] & ~nationMask)) < m_minNations + 1;
-    bool needClubs =
-        clubCount + qMin(remaining, popcount(suffixClubAvail[slotIdx] & ~clubMask)) < m_minClubs + 1;
-    bool needLeagues =
-        leagueCount + qMin(remaining, popcount(suffixLeagueAvail[slotIdx] & ~leagueMask)) < m_minLeagues + 1;
+    bool needTypes = typeCount + qMin(remaining, popcount(suffixTypeAvail[slotIdx] & ~typeMask))
+                     < m_minTypes + 1;
+    bool needNations = nationCount
+                           + qMin(remaining, popcount(suffixNationAvail[slotIdx] & ~nationMask))
+                       < m_minNations + 1;
+    bool needClubs = clubCount + qMin(remaining, popcount(suffixClubAvail[slotIdx] & ~clubMask))
+                     < m_minClubs + 1;
+    bool needLeagues = leagueCount
+                           + qMin(remaining, popcount(suffixLeagueAvail[slotIdx] & ~leagueMask))
+                       < m_minLeagues + 1;
 
     bool hasUnmetCounts = false;
     for (int k = 0; k < m_countConstraints.size(); ++k) {
@@ -919,47 +1092,57 @@ void SBC_Solver::recurse(int slotIdx,
 
     bool hasRequired = requiredPlacedCount < m_includedCardIds.size();
 
-    double currentMaxPossibleAvg = double(totalRating + suffixRatingMaxSum[slotIdx]) / N + m_ratingBonusSlack;
+    double currentMaxPossibleAvg = double(totalRating + suffixRatingMaxSum[slotIdx]) / N
+                                   + m_ratingBonusSlack;
     bool needRating = currentMaxPossibleAvg < double(m_minAvgRating) + 2.0;
 
     QVector<int> sortedCandidates;
 
     // Only sort if there is actually something we are struggling to meet
-    if (needTypes || needNations || needClubs || needLeagues || hasUnmetCounts || hasRequired || anyForced ||
-        needRating) {
+    if (needTypes || needNations || needClubs || needLeagues || hasUnmetCounts || hasRequired
+        || anyForced || needRating) {
         QVector<QPair<int, int>> scored; // <score, cardIndex>
 
         for (int idx : orderedSlotsCandidates[slotIdx]) {
             int score = 0;
 
-            if (needTypes && (cardTypeBit[idx] & ~typeMask))       score += 10;
-            if (needNations && (cardNationBit[idx] & ~nationMask)) score += 10;
-            if (needClubs && (cardClubBit[idx] & ~clubMask))       score += 10;
-            if (needLeagues && (cardLeagueBit[idx] & ~leagueMask)) score += 10;
+            if (needTypes && (cardTypeBit[idx] & ~typeMask))
+                score += 10;
+            if (needNations && (cardNationBit[idx] & ~nationMask))
+                score += 10;
+            if (needClubs && (cardClubBit[idx] & ~clubMask))
+                score += 10;
+            if (needLeagues && (cardLeagueBit[idx] & ~leagueMask))
+                score += 10;
 
-            if (needRating) score += cards[idx].rating - 70;
+            if (needRating)
+                score += cards[idx].rating - 70;
 
             for (int k = 0; k < m_countConstraints.size(); ++k) {
                 if (m_constraintMin[k] > countHits[k] && (m_cardCountBits[idx] & (quint64(1) << k)))
                     score += 20;
             }
 
-            if (hasRequired && m_includedCardIds.contains(cards[idx].id)) score += 50;
+            if (hasRequired && m_includedCardIds.contains(cards[idx].id))
+                score += 50;
 
             scored.append({score, idx});
         }
 
-        std::stable_sort(scored.begin(), scored.end(), [](const QPair<int, int>& a, const QPair<int, int>& b){
-            return a.first > b.first;
-        });
+        std::stable_sort(scored.begin(),
+                         scored.end(),
+                         [](const QPair<int, int> &a, const QPair<int, int> &b) {
+                             return a.first > b.first;
+                         });
 
-        for (const auto& p : scored) sortedCandidates.append(p.second);
-    }
-    else
+        for (const auto &p : scored)
+            sortedCandidates.append(p.second);
+    } else
         sortedCandidates = orderedSlotsCandidates[slotIdx];
 
     for (int idx : sortedCandidates) {
-        if (aborted) return;
+        if (aborted)
+            return;
 
         if (anyForced) {
             bool satisfiesAll = true;
@@ -969,17 +1152,24 @@ void SBC_Solver::recurse(int slotIdx,
                     break;
                 }
             }
-            if (!satisfiesAll) continue;
+            if (!satisfiesAll)
+                continue;
         }
 
-        if (forceNewType && !(cardTypeBit[idx] & ~typeMask)) continue;
-        if (forceNewNation && !(cardNationBit[idx] & ~nationMask)) continue;
-        if (forceNewClub && !(cardClubBit[idx] & ~clubMask)) continue;
-        if (forceNewLeague && !(cardLeagueBit[idx] & ~leagueMask)) continue;
+        if (forceNewType && !(cardTypeBit[idx] & ~typeMask))
+            continue;
+        if (forceNewNation && !(cardNationBit[idx] & ~nationMask))
+            continue;
+        if (forceNewClub && !(cardClubBit[idx] & ~clubMask))
+            continue;
+        if (forceNewLeague && !(cardLeagueBit[idx] & ~leagueMask))
+            continue;
 
-        if (used[idx]) continue;
+        if (used[idx])
+            continue;
 
-        if (cards[idx].id <= minIdSoFar) continue;
+        if (cards[idx].id <= minIdSoFar)
+            continue;
 
         bool conflict = false;
         for (int c : conflicts[idx]) {
@@ -988,18 +1178,19 @@ void SBC_Solver::recurse(int slotIdx,
                 break;
             }
         }
-        if (conflict) continue;
+        if (conflict)
+            continue;
 
         bool overMax = false;
         for (int k = 0; k < m_countConstraints.size(); ++k) {
-            if ((m_cardCountBits[idx] & (quint64(1) << k)) &&
-                m_constraintMax[k] >= 0 &&
-                countHits[k] + 1 > m_constraintMax[k]) {
+            if ((m_cardCountBits[idx] & (quint64(1) << k)) && m_constraintMax[k] >= 0
+                && countHits[k] + 1 > m_constraintMax[k]) {
                 overMax = true;
                 break;
             }
         }
-        if (overMax) continue;
+        if (overMax)
+            continue;
 
         const int nb = cardNationBit[idx];
         const int tb = cardTypeBit[idx];
@@ -1012,10 +1203,14 @@ void SBC_Solver::recurse(int slotIdx,
         const int cb = cardClubBit[idx];
         const int newCCount = clubCount + (cb == 0 || (clubMask & cb) ? 0 : 1);
 
-        if (newNCount > m_maxNations) continue;
-        if (newTCount > m_maxTypes) continue;
-        if (newCCount > m_maxClubs) continue;
-        if (newLCount > m_maxLeagues) continue;
+        if (newNCount > m_maxNations)
+            continue;
+        if (newTCount > m_maxTypes)
+            continue;
+        if (newCCount > m_maxClubs)
+            continue;
+        if (newLCount > m_maxLeagues)
+            continue;
 
         const int savedGroupId = lastIdPerGroup[grp];
         lastIdPerGroup[grp] = cards[idx].id;
@@ -1025,22 +1220,34 @@ void SBC_Solver::recurse(int slotIdx,
 
         const quint64 hitBits = m_cardCountBits[idx];
         for (int k = 0; k < m_countConstraints.size(); ++k) {
-            if (hitBits & (quint64(1) << k)) countHits[k]++;
+            if (hitBits & (quint64(1) << k))
+                countHits[k]++;
         }
 
         const bool isRequired = m_includedCardIds.contains(cards[idx].id);
         const int newRequiredCount = requiredPlacedCount + (isRequired ? 1 : 0);
 
-        recurse(slotIdx + 1, chosen, used, lastIdPerGroup, countHits, newRequiredCount,
-                nationMask | nb, newNCount,
-                typeMask | tb, newTCount,
-                clubMask | cb, newCCount,
-                leagueMask | lb, newLCount,
+        recurse(slotIdx + 1,
+                chosen,
+                used,
+                lastIdPerGroup,
+                countHits,
+                newRequiredCount,
+                nationMask | nb,
+                newNCount,
+                typeMask | tb,
+                newTCount,
+                clubMask | cb,
+                newCCount,
+                leagueMask | lb,
+                newLCount,
                 totalRating + cards[idx].rating,
-                totalCost + cardCost(cards[idx]), costCap);
+                totalCost + cardCost(cards[idx]),
+                costCap);
 
         for (int k = 0; k < m_countConstraints.size(); ++k) {
-            if (hitBits & (quint64(1) << k)) countHits[k]--;
+            if (hitBits & (quint64(1) << k))
+                countHits[k]--;
         }
 
         used[idx] = 0;
@@ -1049,47 +1256,54 @@ void SBC_Solver::recurse(int slotIdx,
     }
 }
 
-void SBC_Solver::printResults(int n) const {
+void SBC_Solver::printResults(int n) const
+{
     for (int r = 0; r < qMin(results.size(), n); ++r) {
         qDebug() << "--- Lineup" << r + 1 << "---";
         for (int s = 0; s < slots_.size(); ++s) {
-            const Card& c = cards[results[r].chosen[s]];
-            qDebug().nospace() << slots_[s].pos << "  "
-                               << c.name << " (" << c.id << ")  "
+            const Card &c = cards[results[r].chosen[s]];
+            qDebug().nospace() << slots_[s].pos << "  " << c.name << " (" << c.id << ")  "
                                << c.rating << "  " << c.country << " / " << c.type;
         }
     }
 }
 
-QString SBC_Solver::leafRejectionReport() const {
-    struct Row { LeafOutcome outcome; const char* label; };
+QString SBC_Solver::leafRejectionReport() const
+{
+    struct Row
+    {
+        LeafOutcome outcome;
+        const char *label;
+    };
     static const Row rows[] = {
-        { LeafCostCapMismatch,        "cost-cap mismatch"             },
-        { LeafCountMinFailed,         "count-constraint min not met"  },
-        { LeafCountMaxFailed,         "count-constraint max exceeded" },
-        { LeafMinNations,             "min-nations"                   },
-        { LeafMaxNations,             "max-nations"                   },
-        { LeafMinTypes,               "min-types"                     },
-        { LeafMaxTypes,               "max-types"                     },
-        { LeafMinClubs,               "min-clubs"                     },
-        { LeafMaxClubs,               "max-clubs"                     },
-        { LeafMinLeagues,             "min-leagues"                   },
-        { LeafMaxLeagues,             "max-leagues"                   },
-        { LeafMinRating,              "min-rating"                    },
-        { LeafMaxRating,              "max-rating"                    },
-        { LeafMinChemistry,           "min-chemistry"                 },
-        { LeafMaxChemistry,           "max-chemistry"                 },
-        { LeafRequiredCountFailed,    "required cards count not met"  },
-        { LeafAccepted,               "accepted"                      },
+        {LeafCostCapMismatch, "cost-cap mismatch"},
+        {LeafCountMinFailed, "count-constraint min not met"},
+        {LeafCountMaxFailed, "count-constraint max exceeded"},
+        {LeafMinNations, "min-nations"},
+        {LeafMaxNations, "max-nations"},
+        {LeafMinTypes, "min-types"},
+        {LeafMaxTypes, "max-types"},
+        {LeafMinClubs, "min-clubs"},
+        {LeafMaxClubs, "max-clubs"},
+        {LeafMinLeagues, "min-leagues"},
+        {LeafMaxLeagues, "max-leagues"},
+        {LeafMinRating, "min-rating"},
+        {LeafMaxRating, "max-rating"},
+        {LeafMinChemistry, "min-chemistry"},
+        {LeafMaxChemistry, "max-chemistry"},
+        {LeafRequiredCountFailed, "required cards count not met"},
+        {LeafAccepted, "accepted"},
     };
 
     quint64 total = 0;
-    for (quint64 v : m_leafOutcomes) total += v;
+    for (quint64 v : m_leafOutcomes)
+        total += v;
 
     auto out = QString("Leaf outcomes (%1 total):\n").arg(total);
-    for (const Row& r : rows) {
+    for (const Row &r : rows) {
         const quint64 v = m_leafOutcomes[r.outcome];
-        if (v == 0) continue;
+        if (v == 0)
+            continue;
         const double pct = total ? 100.0 * double(v) / double(total) : 0.0;
         out += QString("  %1 %2  (%3)\n")
                    .arg(QString(r.label).leftJustified(32))
@@ -1100,42 +1314,40 @@ QString SBC_Solver::leafRejectionReport() const {
     return out;
 }
 
-int SBC_Solver::computeChemistry(const QVector<int>& chosenMRV) const {
+int SBC_Solver::computeChemistry(const QVector<int> &chosenMRV) const
+{
     const int N = chosenMRV.size();
-    if (N == 0) return 0;
+    if (N == 0)
+        return 0;
 
     QHash<QString, int> leagueCount, nationCount, clubCount;
     int flexCount = 0;
     for (int s = 0; s < N; ++s) {
-        const Card& c = cards[chosenMRV[s]];
+        const Card &c = cards[chosenMRV[s]];
 
         nationCount[c.country]++;
 
         if (m_flexibleTypes.contains(c.type)) {
             flexCount++;
-        }
-        else {
+        } else {
             leagueCount[c.league] += (c.type == "Squad Foundations" ? 2 : 1);
             clubCount[c.club]++;
         }
     }
 
-    auto leagueScore = [](int n){ return n >= 8 ? 3 : n >= 5 ? 2 : n >= 3 ? 1 : 0; };
-    auto nationScore = [](int n){ return n >= 8 ? 3 : n >= 5 ? 2 : n >= 2 ? 1 : 0; };
-    auto clubScore = [](int n){ return n >= 7 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0; };
+    auto leagueScore = [](int n) { return n >= 8 ? 3 : n >= 5 ? 2 : n >= 3 ? 1 : 0; };
+    auto nationScore = [](int n) { return n >= 8 ? 3 : n >= 5 ? 2 : n >= 2 ? 1 : 0; };
+    auto clubScore = [](int n) { return n >= 7 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0; };
 
     int total = 0;
     for (int s = 0; s < N; ++s) {
-        const Card& c = cards[chosenMRV[s]];
+        const Card &c = cards[chosenMRV[s]];
         if (m_flexibleTypes.contains(c.type)) {
             total += 3;
             continue;
-        }
-        else {
-            const int chem =
-                leagueScore(leagueCount[c.league] + flexCount) +
-                nationScore(nationCount[c.country]) +
-                clubScore(clubCount[c.club]);
+        } else {
+            const int chem = leagueScore(leagueCount[c.league] + flexCount)
+                             + nationScore(nationCount[c.country]) + clubScore(clubCount[c.club]);
             total += qMin(chem, 3);
         }
     }
@@ -1143,19 +1355,23 @@ int SBC_Solver::computeChemistry(const QVector<int>& chosenMRV) const {
     return total;
 }
 
-double SBC_Solver::computeRating(const QVector<int>& chosenMRV) const {
+double SBC_Solver::computeRating(const QVector<int> &chosenMRV) const
+{
     const int N = chosenMRV.size();
-    if (N == 0) return 0.0;
+    if (N == 0)
+        return 0.0;
 
     int sum = 0;
-    for (int s = 0; s < N; ++s) sum += cards[chosenMRV[s]].rating;
+    for (int s = 0; s < N; ++s)
+        sum += cards[chosenMRV[s]].rating;
 
     const double avg1 = double(sum) / N;
 
     double bonus = 0.0;
     for (int s = 0; s < N; ++s) {
         const int r = cards[chosenMRV[s]].rating;
-        if (r > avg1) bonus += r - avg1;
+        if (r > avg1)
+            bonus += r - avg1;
     }
 
     const double newTotal = sum + bonus;
@@ -1164,25 +1380,7 @@ double SBC_Solver::computeRating(const QVector<int>& chosenMRV) const {
     return std::floor(avg2);
 }
 
-void SBC_Solver::cancel() {
+void SBC_Solver::cancel()
+{
     aborted = true;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,15 +1,15 @@
 #ifndef HELPER_H
 #define HELPER_H
 
-#include <QMainWindow>
 #include <QButtonGroup>
-#include <QSignalMapper>
-#include <QRadioButton>
 #include <QCheckBox>
-#include <QListWidget>
-#include <QtConcurrent/QtConcurrent>
 #include <QFutureWatcher>
+#include <QListWidget>
+#include <QMainWindow>
+#include <QRadioButton>
+#include <QSignalMapper>
 #include <QSize>
+#include <QtConcurrent/QtConcurrent>
 
 #include "dbmanager.h"
 #include "sbc_solver.h"
@@ -29,7 +29,7 @@ public:
     ~Helper();
 
 protected:
-    void closeEvent(QCloseEvent* event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void on_rating_slider_valueChanged(int value);
@@ -96,10 +96,10 @@ private:
 
     DbManager db;
 
-    QList<QRadioButton*> radio_buttons;
+    QList<QRadioButton *> radio_buttons;
     QButtonGroup position_radiobuttons;
 
-    QList<QCheckBox*> checkboxes;
+    QList<QCheckBox *> checkboxes;
     QButtonGroup position_checkboxes;
     int checkbox_count;
 
@@ -108,9 +108,9 @@ private:
 
     static QList<QPair<int, QString>> all_cards;
 
-    SBC_Solver* buildSolverFromCriteria() const;
-    void applyCriterion(SBC_Solver* s, const QString& crit) const;
-    void displaySolutions(const QVector<SBC_Solver::Solution>& sols);
+    SBC_Solver *buildSolverFromCriteria() const;
+    void applyCriterion(SBC_Solver *s, const QString &crit) const;
+    void displaySolutions(const QVector<SBC_Solver::Solution> &sols);
 
     QVector<SBC_Solver::Solution> m_currentSolutions;
     QVector<Card> m_lastSolverCards;
@@ -118,9 +118,9 @@ private:
 
     QSize m_lastSolutionDialogSize;
 
-    SBC_Solver* m_runningSolver = nullptr;
-    QFutureWatcher<void>* m_runningWatcher = nullptr;
-    QTimer* m_progressTimer = nullptr;
+    SBC_Solver *m_runningSolver = nullptr;
+    QFutureWatcher<void> *m_runningWatcher = nullptr;
+    QTimer *m_progressTimer = nullptr;
 
     void refreshSavedSbcs();
 };

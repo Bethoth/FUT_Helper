@@ -3,17 +3,18 @@
 
 #include "dbmanager.h"
 
-#include <QVector>
+#include <QElapsedTimer>
 #include <QHash>
 #include <QString>
 #include <QStringList>
-#include <QElapsedTimer>
+#include <QVector>
 
-#include <atomic>
 #include <array>
+#include <atomic>
 #include <cmath>
 
-struct Card {
+struct Card
+{
     int id;
     QString name;
     int rating;
@@ -21,9 +22,14 @@ struct Card {
     QString country, league, club, type;
 };
 
-struct Slot { int slotNo; QString pos; };
+struct Slot
+{
+    int slotNo;
+    QString pos;
+};
 
-struct CountConstraint {
+struct CountConstraint
+{
     enum Field { Club = 0, League = 1, Nation = 2, Type = 3, SpecialType = 4, IconHeroType = 5 };
     Field field;
     QString value; // unused for SpecialType
@@ -31,71 +37,73 @@ struct CountConstraint {
     int maxCount = -1; // -1 = no upper bound
 };
 
-class SBC_Solver {
+class SBC_Solver
+{
 public:
-    SBC_Solver(const DbManager& db, int maxSolutions, const QStringList& baseExcludeTypes);
+    SBC_Solver(const DbManager &db, int maxSolutions, const QStringList &baseExcludeTypes);
 
-    SBC_Solver& club(const QString& c);
-    SBC_Solver& clubs(const QStringList& cs);
-    SBC_Solver& clubExactly(const QString& club, int n);
-    SBC_Solver& clubAtLeast(const QString& club, int n);
-    SBC_Solver& clubAtMost(const QString& club, int n);
-    SBC_Solver& league(const QString& l);
-    SBC_Solver& leagues(const QStringList& ls);
-    SBC_Solver& leagueExactly(const QString& league, int n);
-    SBC_Solver& leagueAtLeast(const QString& league, int n);
-    SBC_Solver& leagueAtMost(const QString& league, int n);
-    SBC_Solver& nation(const QString& n);
-    SBC_Solver& nations(const QStringList& ns);
-    SBC_Solver& nationExactly(const QString& nation, int n);
-    SBC_Solver& nationAtLeast(const QString& nation, int n);
-    SBC_Solver& nationAtMost(const QString& nation, int n);
-    SBC_Solver& includeTypes(const QStringList& ts);
-    SBC_Solver& excludeTypes(const QStringList& ts);
-    SBC_Solver& typeExactly(const QString& type, int n);
-    SBC_Solver& typeAtLeast(const QString& type, int n);
-    SBC_Solver& typeAtMost(const QString& type, int n);
-    SBC_Solver& specialExactly(int n);
-    SBC_Solver& specialAtLeast(int n);
-    SBC_Solver& specialAtMost(int n);
-    SBC_Solver& iconHeroExactly(int n);
-    SBC_Solver& iconHeroAtLeast(int n);
-    SBC_Solver& iconHeroAtMost(int n);
-    SBC_Solver& minAvgRating(int r);
-    SBC_Solver& maxAvgRating(int r);
-    SBC_Solver& minNations(int n);
-    SBC_Solver& minTypes(int n);
-    SBC_Solver& maxNations(int n);
-    SBC_Solver& maxTypes(int n);
-    SBC_Solver& minClubs(int n);
-    SBC_Solver& maxClubs(int n);
-    SBC_Solver& minLeagues(int n);
-    SBC_Solver& maxLeagues(int n);
-    SBC_Solver& formation(const QVector<Slot>& formation);
-    SBC_Solver& minChemistry(int c);
-    SBC_Solver& maxChemistry(int c = -1); // -1 = no upper bound
-    SBC_Solver& flexibleTypes(const QStringList& ts);
-    SBC_Solver& typeCost(const QString& type, int cost);
-    SBC_Solver& excludeCardIds(const QSet<int>& ids);
-    SBC_Solver& includeCardIds(const QSet<int>& ids);
-    SBC_Solver& maxNodes(quint64 n); // 0 = unlimited
-    SBC_Solver& maxSeconds(double sec); // 0 = unlimited
+    SBC_Solver &club(const QString &c);
+    SBC_Solver &clubs(const QStringList &cs);
+    SBC_Solver &clubExactly(const QString &club, int n);
+    SBC_Solver &clubAtLeast(const QString &club, int n);
+    SBC_Solver &clubAtMost(const QString &club, int n);
+    SBC_Solver &league(const QString &l);
+    SBC_Solver &leagues(const QStringList &ls);
+    SBC_Solver &leagueExactly(const QString &league, int n);
+    SBC_Solver &leagueAtLeast(const QString &league, int n);
+    SBC_Solver &leagueAtMost(const QString &league, int n);
+    SBC_Solver &nation(const QString &n);
+    SBC_Solver &nations(const QStringList &ns);
+    SBC_Solver &nationExactly(const QString &nation, int n);
+    SBC_Solver &nationAtLeast(const QString &nation, int n);
+    SBC_Solver &nationAtMost(const QString &nation, int n);
+    SBC_Solver &includeTypes(const QStringList &ts);
+    SBC_Solver &excludeTypes(const QStringList &ts);
+    SBC_Solver &typeExactly(const QString &type, int n);
+    SBC_Solver &typeAtLeast(const QString &type, int n);
+    SBC_Solver &typeAtMost(const QString &type, int n);
+    SBC_Solver &specialExactly(int n);
+    SBC_Solver &specialAtLeast(int n);
+    SBC_Solver &specialAtMost(int n);
+    SBC_Solver &iconHeroExactly(int n);
+    SBC_Solver &iconHeroAtLeast(int n);
+    SBC_Solver &iconHeroAtMost(int n);
+    SBC_Solver &minAvgRating(int r);
+    SBC_Solver &maxAvgRating(int r);
+    SBC_Solver &minNations(int n);
+    SBC_Solver &minTypes(int n);
+    SBC_Solver &maxNations(int n);
+    SBC_Solver &maxTypes(int n);
+    SBC_Solver &minClubs(int n);
+    SBC_Solver &maxClubs(int n);
+    SBC_Solver &minLeagues(int n);
+    SBC_Solver &maxLeagues(int n);
+    SBC_Solver &formation(const QVector<Slot> &formation);
+    SBC_Solver &minChemistry(int c);
+    SBC_Solver &maxChemistry(int c = -1); // -1 = no upper bound
+    SBC_Solver &flexibleTypes(const QStringList &ts);
+    SBC_Solver &typeCost(const QString &type, int cost);
+    SBC_Solver &excludeCardIds(const QSet<int> &ids);
+    SBC_Solver &includeCardIds(const QSet<int> &ids);
+    SBC_Solver &maxNodes(quint64 n);    // 0 = unlimited
+    SBC_Solver &maxSeconds(double sec); // 0 = unlimited
 
     void prepare();
     void search();
     void solve();
     void printResults(int n) const;
 
-    struct Solution {
+    struct Solution
+    {
         QVector<int> chosen;
         int chemistry = 0;
         int totalRating = 0;
         int totalCost = 0;
         double gameRating = 0.0;
     };
-    const QVector<Solution>& getResults() const { return results; }
-    const QVector<Card>& allCards() const { return cards; }
-    const QVector<Slot>& getSlots() const { return slots_; }
+    const QVector<Solution> &getResults() const { return results; }
+    const QVector<Card> &allCards() const { return cards; }
+    const QVector<Slot> &getSlots() const { return slots_; }
 
     void cancel();
 
@@ -106,37 +114,49 @@ public:
 
     QString leafRejectionReport() const;
 
-    double computeRating(const QVector<int>& chosenMRV) const;
+    double computeRating(const QVector<int> &chosenMRV) const;
 
 private:
     void recurse(int slotIdx,
-                 QVector<int>& chosen,
-                 QVector<char>& used,
-                 QVector<int>& lastIdPerGroup,
-                 QVector<int>& countHits,
+                 QVector<int> &chosen,
+                 QVector<char> &used,
+                 QVector<int> &lastIdPerGroup,
+                 QVector<int> &countHits,
                  int requiredPlacedCount,
-                 int nationMask, int nationCount,
-                 int typeMask, int typeCount,
-                 int clubMask, int clubCount,
-                 int leagueMask, int leagueCount,
+                 int nationMask,
+                 int nationCount,
+                 int typeMask,
+                 int typeCount,
+                 int clubMask,
+                 int clubCount,
+                 int leagueMask,
+                 int leagueCount,
                  int totalRating,
-                 int totalCost, int costCap);
+                 int totalCost,
+                 int costCap);
 
-    static inline int popcount(int x) {
+    static inline int popcount(int x)
+    {
 #if defined(__GNUC__) || defined(__clang__)
         return __builtin_popcount(x);
 #else
-        int c = 0; while (x) { x &= x - 1; ++c; } return c;
+        int c = 0;
+        while (x) {
+            x &= x - 1;
+            ++c;
+        }
+        return c;
 #endif
     }
 
-    static inline bool isSpecialType(const QString& type) {
+    static inline bool isSpecialType(const QString &type)
+    {
         return type != "Gold" && type != "Silver" && type != "Bronze";
     }
 
     bool canSatisfyCount(int k, int minNeeded) const;
 
-    const DbManager& db;
+    const DbManager &db;
     int maxSolutions;
 
     QVector<Slot> slots_;
@@ -182,10 +202,10 @@ private:
     int m_minChemistry = 0, m_maxChemistry = -1;
     QSet<int> m_excludedCardIds, m_includedCardIds;
 
-    int computeChemistry(const QVector<int>& chosenMRV) const;
+    int computeChemistry(const QVector<int> &chosenMRV) const;
     QStringList m_flexibleTypes = {"Icon", "Debut Icon", "Hero", "Hall of FUT"};
 
-    int cardCost(const Card& c) const;
+    int cardCost(const Card &c) const;
     QHash<QString, int> m_typeCost;
     QVector<int> suffixMinCost, suffixMaxCost;
     int m_minPossibleCost = 0, m_maxPossibleCost = 0;
@@ -199,13 +219,20 @@ private:
 
     enum LeafOutcome {
         LeafCostCapMismatch = 0,
-        LeafCountMinFailed, LeafCountMaxFailed,
-        LeafMinNations, LeafMaxNations,
-        LeafMinTypes, LeafMaxTypes,
-        LeafMinClubs, LeafMaxClubs,
-        LeafMinLeagues, LeafMaxLeagues,
-        LeafMinRating, LeafMaxRating,
-        LeafMinChemistry, LeafMaxChemistry,
+        LeafCountMinFailed,
+        LeafCountMaxFailed,
+        LeafMinNations,
+        LeafMaxNations,
+        LeafMinTypes,
+        LeafMaxTypes,
+        LeafMinClubs,
+        LeafMaxClubs,
+        LeafMinLeagues,
+        LeafMaxLeagues,
+        LeafMinRating,
+        LeafMaxRating,
+        LeafMinChemistry,
+        LeafMaxChemistry,
         LeafRequiredCountFailed,
         LeafAccepted,
         LeafOutcomeCount
@@ -216,18 +243,3 @@ private:
 };
 
 #endif // SBC_SOLVER_H
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

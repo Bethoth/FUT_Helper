@@ -2,16 +2,16 @@
 #define DBMANAGER_H
 
 #include <QString>
-#include <QtSql/QSqlDatabase>
 #include <QStringList>
+#include <QtSql/QSqlDatabase>
 
 class DbManager
 {
 public:
-    DbManager(const QString& path, const QString& year_);
+    DbManager(const QString &path, const QString &year_);
     ~DbManager();
-    DbManager(const DbManager&) = delete;
-    DbManager& operator=(const DbManager&) = delete;
+    DbManager(const DbManager &) = delete;
+    DbManager &operator=(const DbManager &) = delete;
 
     int getLastId() const;
     int getLastRating() const;
@@ -20,7 +20,7 @@ public:
 
     QStringList getCountries() const;
     QStringList getClubs() const;
-    QStringList getClubsFromLeague(const QString& league) const;
+    QStringList getClubsFromLeague(const QString &league) const;
     QStringList getLeagues() const;
     QStringList getTypes() const;
     QStringList getPlayers() const;
@@ -37,40 +37,40 @@ public:
     QString getType(int id) const;
     QVector<int> getSames(int id) const;
 
-    QStringList getPlayerInfoByName(const QString& name) const;
+    QStringList getPlayerInfoByName(const QString &name) const;
 
     QList<QPair<int, QString>> getAll() const;
     QList<QPair<int, QString>> getUnfilled() const;
 
     bool addCard(int id,
-                 const QString& name,
+                 const QString &name,
                  int rating,
-                 const QString& position,
-                 const QString& secpos1,
-                 const QString& secpos2,
-                 const QString& secpos3,
-                 const QString& secpos4,
-                 const QString& secpos5,
-                 const QString& country,
-                 const QString& league,
-                 const QString& club,
+                 const QString &position,
+                 const QString &secpos1,
+                 const QString &secpos2,
+                 const QString &secpos3,
+                 const QString &secpos4,
+                 const QString &secpos5,
+                 const QString &country,
+                 const QString &league,
+                 const QString &club,
                  int stat1,
                  int stat2,
                  int stat3,
                  int stat4,
                  int stat5,
                  int stat6,
-                 const QString& type);
+                 const QString &type);
 
     bool updateCard(int id,
-                    const QString& secpos1,
-                    const QString& secpos2,
-                    const QString& secpos3,
-                    const QString& secpos4,
-                    const QString& secpos5,
-                    const QString& country,
-                    const QString& league,
-                    const QString& club,
+                    const QString &secpos1,
+                    const QString &secpos2,
+                    const QString &secpos3,
+                    const QString &secpos4,
+                    const QString &secpos5,
+                    const QString &country,
+                    const QString &league,
+                    const QString &club,
                     int stat1,
                     int stat2,
                     int stat3,
@@ -81,7 +81,7 @@ public:
     void addSamePlayer(int card, int same);
     void addNewPlayer(int id);
 
-    bool executeSqlFile(const QString& filePath);
+    bool executeSqlFile(const QString &filePath);
 
 private:
     QSqlDatabase db;
