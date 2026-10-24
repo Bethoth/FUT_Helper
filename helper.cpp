@@ -895,13 +895,19 @@ SBC_Solver *Helper::buildSolverFromCriteria() const
     auto *s = new SBC_Solver(db, 50, {"SBC Premium", "Evo", "Elite Evo", "LTM"});
 
     bool hasFormation = false;
+    bool hasFlexible = false;
     for (int i = 0; i < ui->criteria_listwidget->count(); ++i) {
         const QString c = ui->criteria_listwidget->item(i)->text();
         if (c.startsWith("Formation(")) {
             hasFormation = true;
-            break;
+            continue;
+        }
+        if (c.startsWith("FlexibleTypes(")) {
+            hasFlexible = true;
+            continue;
         }
     }
+
     if (!hasFormation) {
         s->formation({{1, "GK"},
                       {2, "LB"},
@@ -915,6 +921,9 @@ SBC_Solver *Helper::buildSolverFromCriteria() const
                       {10, "ST"},
                       {11, "RW"}});
     }
+    if (!hasFlexible)
+        s->flexibleTypes({"Icon", "Debut Icon", "Hero", "Ultimate Scream Hero",
+                          "Hall of FUT"});
 
     for (int i = 0; i < ui->criteria_listwidget->count(); ++i) {
         applyCriterion(s, ui->criteria_listwidget->item(i)->text());

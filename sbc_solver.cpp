@@ -692,7 +692,8 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
                 matches = isSpecialType(cards[i].type);
                 break;
             case CountConstraint::IconHeroType:
-                matches = cards[i].type == "Icon" || cards[i].type == "Hero"
+                matches = cards[i].type.contains("Icon")
+                          || cards[i].type.contains("Hero")
                           || cards[i].type == "Hall of FUT";
                 break;
             }
@@ -1321,15 +1322,17 @@ int SBC_Solver::computeChemistry(const QVector<int> &chosenMRV) const
         return 0;
 
     QHash<QString, int> leagueCount, nationCount, clubCount;
-    int flexCount = 0;
+    int iconCount = 0;
     for (int s = 0; s < N; ++s) {
         const Card &c = cards[chosenMRV[s]];
 
         nationCount[c.country]++;
 
-        if (m_flexibleTypes.contains(c.type)) {
-            flexCount++;
-        } else {
+        if (c.type.contains("Icon"))
+            iconCount++;
+        else if (m_flexibleTypes.contains(c.type))
+            leagueCount[c.league]++;
+        else {
             leagueCount[c.league] += (c.type == "Squad Foundations" ? 2 : 1);
             clubCount[c.club]++;
         }
@@ -1346,8 +1349,9 @@ int SBC_Solver::computeChemistry(const QVector<int> &chosenMRV) const
             total += 3;
             continue;
         } else {
-            const int chem = leagueScore(leagueCount[c.league] + flexCount)
-                             + nationScore(nationCount[c.country]) + clubScore(clubCount[c.club]);
+            const int chem = leagueScore(leagueCount[c.league] + iconCount)
+                             + nationScore(nationCount[c.country])
+                             + clubScore(clubCount[c.club]);
             total += qMin(chem, 3);
         }
     }
