@@ -1062,7 +1062,7 @@
        <rect>
         <x>360</x>
         <y>350</y>
-        <width>91</width>
+        <width>111</width>
         <height>26</height>
        </rect>
       </property>
@@ -1077,6 +1077,44 @@
       </property>
       <property name="value">
        <number>120</number>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="many_solutions_checkbox">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>380</y>
+        <width>101</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Max solutions:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="many_solutions_spinbox">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>360</x>
+        <y>380</y>
+        <width>111</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="singleStep">
+       <number>50</number>
+      </property>
+      <property name="value">
+       <number>200</number>
       </property>
      </widget>
     </widget>

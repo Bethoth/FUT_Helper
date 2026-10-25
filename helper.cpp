@@ -663,6 +663,10 @@ void Helper::on_long_search_checkbox_toggled(bool checked)
     ui->time_budget_spinbox->setEnabled(checked);
 }
 
+void Helper::on_many_solutions_checkbox_toggled(bool checked) {
+    ui->many_solutions_spinbox->setEnabled(checked);
+}
+
 void Helper::applyCriterion(SBC_Solver *s, const QString &crit) const
 {
     const int lp = crit.indexOf('(');
@@ -892,7 +896,11 @@ void Helper::on_cancel_button_clicked()
 
 SBC_Solver *Helper::buildSolverFromCriteria() const
 {
-    auto *s = new SBC_Solver(db, 50, {"SBC Premium", "Evo", "Elite Evo", "LTM"});
+    int maxSols = 50;
+    if (ui->many_solutions_checkbox->isChecked())
+        maxSols = ui->many_solutions_spinbox->value();
+
+    auto *s = new SBC_Solver(db, maxSols, {"SBC Premium", "Evo", "Elite Evo", "LTM"});
 
     bool hasFormation = false;
     bool hasFlexible = false;

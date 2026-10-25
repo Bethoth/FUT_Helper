@@ -83,6 +83,7 @@ private slots:
     void on_gk_checkbox_checkStateChanged(const Qt::CheckState &state);
 
     void on_long_search_checkbox_toggled(bool checked);
+    void on_many_solutions_checkbox_toggled(bool checked);
 
     void updateSolveProgress();
 
