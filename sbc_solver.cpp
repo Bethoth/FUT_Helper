@@ -1060,11 +1060,11 @@ void SBC_Solver::recurse(int slotIdx,
         }
     }
 
-    bool forceNewType = typeCount + qMin(remaining, newTypes) == m_minTypes && newTypes > 0;
-    bool forceNewNation = nationCount + qMin(remaining, newNations) == m_minNations
+    bool forceNewType = m_minTypes - typeCount == remaining && newTypes > 0;
+    bool forceNewNation = m_minNations - nationCount == remaining
                           && newNations > 0;
-    bool forceNewClub = clubCount + qMin(remaining, newClubs) == m_minClubs && newClubs > 0;
-    bool forceNewLeague = leagueCount + qMin(remaining, newLeagues) == m_minLeagues
+    bool forceNewClub = m_minClubs - clubCount == remaining && newClubs > 0;
+    bool forceNewLeague = m_minLeagues - leagueCount == remaining
                           && newLeagues > 0;
 
     // Dynamic Heuristic Sorting
