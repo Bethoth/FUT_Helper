@@ -931,7 +931,7 @@ SBC_Solver *Helper::buildSolverFromCriteria() const
     }
     if (!hasFlexible)
         s->flexibleTypes({"Icon", "Debut Icon", "Hero", "Ultimate Scream Hero",
-                          "Hall of FUT"});
+                          "Hall of FUT", "Hall of FUT Upgraded"});
 
     for (int i = 0; i < ui->criteria_listwidget->count(); ++i) {
         applyCriterion(s, ui->criteria_listwidget->item(i)->text());

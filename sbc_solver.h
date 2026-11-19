@@ -203,7 +203,7 @@ private:
     QSet<int> m_excludedCardIds, m_includedCardIds;
 
     int computeChemistry(const QVector<int> &chosenMRV) const;
-    QStringList m_flexibleTypes = {"Icon", "Debut Icon", "Hero", "Hall of FUT"};
+    QStringList m_flexibleTypes = {"Icon", "Debut Icon", "Hero", "Hall of FUT", "Hall of FUT Upgraded"};
 
     int cardCost(const Card &c) const;
     QHash<QString, int> m_typeCost;

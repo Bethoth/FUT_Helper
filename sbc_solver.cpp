@@ -694,7 +694,7 @@ WHERE (c.club = '' OR cl.club IS NOT NULL)
             case CountConstraint::IconHeroType:
                 matches = cards[i].type.contains("Icon")
                           || cards[i].type.contains("Hero")
-                          || cards[i].type == "Hall of FUT";
+                          || cards[i].type.contains("Hall of FUT");
                 break;
             }
             if (matches)
